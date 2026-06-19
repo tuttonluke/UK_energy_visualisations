@@ -35,9 +35,9 @@ async function initialise_app() {
             });
 
             // Add map source
-            map.addSource('pes-regions-source', { 
-                type: 'geojson', 
-                data: geojsonData 
+            map.addSource('pes-regions-source', {
+                type: 'geojson',
+                data: geojsonData
             });
 
             // Map background colour
@@ -50,13 +50,23 @@ async function initialise_app() {
                         'interpolate',
                         ['linear'],
                         ['get', 'generation'],
-                        0,   '#1e272c',
+                        0, '#1e272c',
                         50,
-                            '#f1c40f',
+                        '#fce691',
                         200,
-                            '#e67e22',
+                        '#f4d660',
                         500,
-                            '#e74c3c'
+                        '#f0c61f',
+                        1000,
+                        '#ee9652',
+                        1500,
+                        '#ed7b25',
+                        2000,
+                        '#ef5747',
+                        2500,
+                        '#ec3723',
+                        3000,
+                        '#f31f08',
                     ],
                     'fill-opacity': [
                         'case',
@@ -94,27 +104,27 @@ async function initialise_app() {
                             { hover: false }
                         );
                     }
-                hovered_polygon_id = current_feature.id;
-                map.setFeatureState(
-                    { source: 'pes-regions-source', id: hovered_polygon_id },
-                    { hover: true }
-                );
+                    hovered_polygon_id = current_feature.id;
+                    map.setFeatureState(
+                        { source: 'pes-regions-source', id: hovered_polygon_id },
+                        { hover: true }
+                    );
 
-                // Tooltip logic
-                const region_name = current_feature.properties.Area;
-                const dnoName = current_feature.properties.DNO_Full;
+                    // Tooltip logic
+                    const region_name = current_feature.properties.Area;
+                    const dnoName = current_feature.properties.DNO_Full;
 
-                const generation_mw = solar_data[current_feature.id];
-                const total_generation_mw = solar_data["total_gen"]
-                const display_total_data = (total_generation_mw !== undefined && total_generation_mw !== null)
-                                           ? `${total_generation_mw} MW` 
-                                           : "0 MW (Night/Offline)";
-                const display_region_data = (generation_mw !== undefined && generation_mw !== null)
-                                             ? `${generation_mw} MW` 
-                                             : "0 MW (Night/Offline)";
+                    const generation_mw = solar_data[current_feature.id];
+                    const total_generation_mw = solar_data["total_gen"]
+                    const display_total_data = (total_generation_mw !== undefined && total_generation_mw !== null)
+                        ? `${total_generation_mw} MW`
+                        : "0 MW (Night/Offline)";
+                    const display_region_data = (generation_mw !== undefined && generation_mw !== null)
+                        ? `${generation_mw} MW`
+                        : "0 MW (Night/Offline)";
 
-                popup.setLngLat(e.lngLat)
-                    .setHTML(`
+                    popup.setLngLat(e.lngLat)
+                        .setHTML(`
                         <div style="font-family: sans-serif; padding: 5px;">
                             <h3 style="margin: 0 0 5px 0;">${region_name}</h3>
                             <p style="margin: 0; font-size: 12px; color: #666;">${dnoName}</p>
@@ -124,7 +134,7 @@ async function initialise_app() {
                             <p style="margin: 0; font-weight: bold;">Region Solar Output: <span style="color: #e67e22;">${display_region_data}</span></p>
                         </div>
                     `)
-                    .addTo(map);
+                        .addTo(map);
                 }
             });
 
@@ -137,7 +147,7 @@ async function initialise_app() {
                     );
                 }
                 hovered_polygon_id = null;
-            
+
                 popup.remove();
             });
         });
