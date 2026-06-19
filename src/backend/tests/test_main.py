@@ -1,5 +1,4 @@
 import pytest
-import time
 from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock
 
@@ -7,6 +6,7 @@ import main
 from main import app
 
 client = TestClient(app)
+
 
 @pytest.fixture(autouse=True)
 def reset_state():
@@ -20,12 +20,14 @@ def reset_state():
 
     yield
 
+
 def test_get_config():
     """Test that the config endpoint returns a 200 OK and a JSON object."""
-    
+
     response = client.get("/api/config")
     assert response.status_code == 200
     assert "mapboxToken" in response.json()
+
 
 @patch("main.httpx.AsyncClient.get")
 def test_solar_data_fetching(mock_get):
@@ -34,7 +36,7 @@ def test_solar_data_fetching(mock_get):
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.json.return_value = {"data": [["2024-01-01T12:00:00Z", 10, 150.5]]}
-    
+
     mock_get.return_value = mock_response
 
     response = client.get("/api/solar")
@@ -47,6 +49,7 @@ def test_solar_data_fetching(mock_get):
     expected_total = round(150.5 * 14, 1)
     assert data["total_gen"] == expected_total
     assert mock_get.call_count == 14
+
 
 @patch("main.httpx.AsyncClient.get")
 def test_solar_cache_logic(mock_get):
@@ -63,10 +66,3 @@ def test_solar_cache_logic(mock_get):
 
     client.get("api/solar")
     assert mock_get.call_count == 0
-
-
-
-
-
-
-
