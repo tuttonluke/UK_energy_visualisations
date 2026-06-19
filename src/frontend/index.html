@@ -1,27 +1,238 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GB Solar Generation Map</title>
-    
+    <title>GB Live Solar Generation</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Mapbox GL JS & CSS -->
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
-    
+
     <style>
-        body { margin: 0; padding: 0; }
-        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        /* Custom overrides for Mapbox tooltip to match Tailwind theme */
         .mapboxgl-popup-content {
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            padding: 10px;
+            background-color: #1e293b !important;
+            /* Tailwind slate-800 */
+            color: #f8fafc !important;
+            /* Tailwind slate-50 */
+            border-radius: 0.5rem !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3) !important;
+            padding: 12px !important;
+            border: 1px solid #334155;
+            /* Tailwind slate-700 */
+        }
+
+        .mapboxgl-popup-tip {
+            border-top-color: #1e293b !important;
+            border-bottom-color: #1e293b !important;
         }
     </style>
 </head>
-<body>
 
-    <div id="map"></div>
+<body class="bg-slate-900 text-slate-50 overflow-hidden h-screen w-screen relative font-sans">
 
-    <script src="app.js"></script>
+    <!-- UI Overlay -->
+    <div
+        class="absolute top-0 left-0 w-full z-10 pointer-events-none p-4 md:p-6 flex flex-col md:flex-row justify-between items-start gap-4">
+
+        <!-- Header -->
+        <div
+            class="bg-slate-800/90 backdrop-blur-md border border-slate-700 p-4 rounded-xl shadow-lg pointer-events-auto">
+            <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-orange-500">
+                GB Solar Generation
+            </h1>
+            <p class="text-sm text-slate-400 mt-1">Live PV Output by Distribution Network Operator</p>
+        </div>
+
+        <!-- Total Stats Card -->
+        <div
+            class="bg-slate-800/90 backdrop-blur-md border border-slate-700 p-5 rounded-xl shadow-lg pointer-events-auto min-w-[200px] flex flex-col items-center justify-center">
+            <h2 class="text-sm text-slate-400 uppercase tracking-wider font-semibold">Total GB Output</h2>
+            <div class="mt-2 flex items-baseline gap-1">
+                <span id="total-gen-display" class="text-4xl font-bold text-amber-400">--</span>
+                <span class="text-lg text-slate-300">MW</span>
+            </div>
+            <div id="status-indicator" class="mt-2 flex items-center gap-2 text-xs text-slate-400">
+                <div class="w-2 h-2 rounded-full bg-slate-500 animate-pulse" id="status-dot"></div>
+                <span id="status-text">Connecting...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map Container -->
+    <div id="map" class="absolute top-0 left-0 w-full h-full"></div>
+
+    <script>
+        async function initialise_app() {
+            try {
+                const config_response = await fetch('http://127.0.0.1:8000/api/config');
+                const config = await config_response.json();
+                mapboxgl.accessToken = config.mapboxToken;
+
+                // Map configuration
+                const map = new mapboxgl.Map({
+                    container: 'map',
+                    style: 'mapbox://styles/mapbox/dark-v11',
+                    center: [-2.5, 54.5],
+                    zoom: 5.5,
+                    pitch: 20
+                });
+
+                // Tooltip object
+                const popup = new mapboxgl.Popup({
+                    closeButton: false,
+                    closeOnClick: false,
+                    className: 'custom-popup'
+                });
+
+                let hovered_polygon_id = null;
+
+                map.on('load', async () => {
+                    document.getElementById('status-text').innerText = "Fetching live data...";
+
+                    const regions_response = await fetch('http://127.0.0.1:8000/api/regions');
+                    const geojsonData = await regions_response.json();
+
+                    const solar_response = await fetch('http://127.0.0.1:8000/api/solar');
+                    const solar_data = await solar_response.json();
+
+                    // Update UI Total
+                    const totalGen = solar_data["total_gen"];
+                    document.getElementById('total-gen-display').innerText = totalGen !== undefined ? totalGen : "0";
+                    document.getElementById('status-text').innerText = "Live / Connected";
+                    document.getElementById('status-dot').classList.replace('bg-slate-500', 'bg-emerald-500');
+
+                    // Map properties
+                    geojsonData.features.forEach(feature => {
+                        feature.id = feature.properties.ID;
+                        const mw_value = solar_data[feature.id];
+                        feature.properties.generation = (mw_value !== undefined && mw_value !== null) ? mw_value : 0;
+                    });
+
+                    // Add map source
+                    map.addSource('pes-regions-source', {
+                        type: 'geojson',
+                        data: geojsonData
+                    });
+
+                    // Map background colour
+                    map.addLayer({
+                        id: 'pes-regions-fill',
+                        type: 'fill',
+                        source: 'pes-regions-source',
+                        paint: {
+                            'fill-color': [
+                                'interpolate',
+                                ['linear'],
+                                ['get', 'generation'],
+                                0, '#1e293b',    // Slate 800 (Night/Zero)
+                                50, '#fcd34d',   // Amber 300
+                                200, '#fbbf24',  // Amber 400
+                                500, '#f59e0b',  // Amber 500
+                                1000, '#ea580c', // Orange 600
+                                2000, '#dc2626', // Red 600
+                                3000, '#991b1b', // Red 800
+                            ],
+                            'fill-opacity': [
+                                'case',
+                                ['boolean', ['feature-state', 'hover'], false],
+                                0.8, // opacity when hovered
+                                0.4  // opacity when not hovered
+                            ]
+                        }
+                    });
+
+                    // Add region borders
+                    map.addLayer({
+                        id: 'pes-regions-borders',
+                        type: 'line',
+                        source: 'pes-regions-source',
+                        paint: {
+                            'line-color': '#94a3b8', // Slate 400
+                            'line-width': [
+                                'case',
+                                ['boolean', ['feature-state', 'hover'], false],
+                                2.5,  // Thick border on hover
+                                0.5   // Thin border otherwise
+                            ]
+                        }
+                    });
+
+                    // Mouse events
+                    map.on('mousemove', 'pes-regions-fill', (e) => {
+                        if (e.features.length > 0) {
+                            const current_feature = e.features[0];
+
+                            if (hovered_polygon_id != null) {
+                                map.setFeatureState(
+                                    { source: 'pes-regions-source', id: hovered_polygon_id },
+                                    { hover: false }
+                                );
+                            }
+                            hovered_polygon_id = current_feature.id;
+                            map.setFeatureState(
+                                { source: 'pes-regions-source', id: hovered_polygon_id },
+                                { hover: true }
+                            );
+
+                            // Tooltip logic
+                            const region_name = current_feature.properties.Area;
+                            const dnoName = current_feature.properties.DNO_Full;
+                            const generation_mw = solar_data[current_feature.id];
+
+                            const display_region_data = (generation_mw !== undefined && generation_mw !== null)
+                                ? `${generation_mw} MW`
+                                : "0 MW (Offline)";
+
+                            popup.setLngLat(e.lngLat)
+                                .setHTML(`
+                                <div>
+                                    <h3 class="text-lg font-bold text-amber-400 m-0">${region_name}</h3>
+                                    <p class="text-xs text-slate-400 m-0 mt-1">${dnoName}</p>
+                                    <p class="text-xs text-slate-500 m-0">PES ID: ${current_feature.id}</p>
+                                    <div class="h-px w-full bg-slate-700 my-2"></div>
+                                    <p class="text-sm m-0 text-slate-300">Region Output:</p>
+                                    <p class="text-xl font-bold text-white m-0">${display_region_data}</p>
+                                </div>
+                            `)
+                                .addTo(map);
+                        }
+                    });
+
+                    // When mouse leaves regions entirely
+                    map.on('mouseleave', 'pes-regions-fill', () => {
+                        if (hovered_polygon_id !== null) {
+                            map.setFeatureState(
+                                { source: 'pes-regions-source', id: hovered_polygon_id },
+                                { hover: false }
+                            );
+                        }
+                        hovered_polygon_id = null;
+                        map.getCanvas().style.cursor = '';
+                        popup.remove();
+                    });
+
+                    // Change cursor on hover
+                    map.on('mouseenter', 'pes-regions-fill', () => {
+                        map.getCanvas().style.cursor = 'pointer';
+                    });
+                });
+
+            } catch (error) {
+                console.error("Initialisation failed:", error);
+                document.getElementById('status-text').innerText = "Connection Failed";
+                document.getElementById('status-dot').classList.replace('bg-slate-500', 'bg-red-500');
+            }
+        }
+
+        // Initialize application
+        initialise_app();
+    </script>
 </body>
+
 </html>
