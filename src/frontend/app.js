@@ -1,5 +1,6 @@
 import { initCharts } from './charts.js';
 import { initMap } from './map.js';
+import { initEnvMap } from './envMap.js';
 
 document.addEventListener("DOMContentLoaded", () => {
     
@@ -25,6 +26,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 initCharts();
             } else if (targetId === 'tab-maps') {
                 initMap();
+            } else if (targetId === 'tab-environment') {
+                initEnvMap();
             }
         });
     });

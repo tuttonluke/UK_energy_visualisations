@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 
-from routers import solar, generation
+from routers import solar, generation, river_levels
 
 load_dotenv()
 app = FastAPI()
@@ -27,6 +27,7 @@ except FileNotFoundError:
 # Include routers
 app.include_router(solar.router, prefix="/api/solar", tags=["solar"])
 app.include_router(generation.router, prefix="/api/generation", tags=["generation"])
+app.include_router(river_levels.router, prefix="/api/environment", tags=["environment"])
 
 # API endpoints
 @app.get("/api/config")

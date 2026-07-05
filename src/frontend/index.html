@@ -32,6 +32,9 @@
         <div class="nav-item" data-target="tab-maps">
             Maps
         </div>
+        <div class="nav-item" data-target="tab-environment">
+            Environment
+        </div>
     </nav>
 
     <!-- Main Content Area -->
@@ -78,6 +81,41 @@
 
             <!-- Map Container -->
             <div id="map"></div>
+        </div>
+
+        <!-- Environment Tab -->
+        <div id="tab-environment" class="tab-content">
+            <div id="env-map-overlay">
+                <div class="glass-panel">
+                    <select id="env-map-selector" class="custom-select">
+                        <option value="rivers">River Levels</option>
+                    </select>
+                </div>
+                <div id="env-stats" class="glass-panel">
+                    <div class="stats-title">Data Status</div>
+                    <div class="status-indicator">
+                        <div class="status-dot pulse" id="env-status-dot"></div>
+                        <span id="env-status-text">Connecting...</span>
+                    </div>
+                </div>
+                
+                <div id="env-legend" class="glass-panel">
+                    <div class="stats-title" style="margin-bottom: 8px;">River Level</div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #ef4444;"></div>
+                        <span>High (Above Normal)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #10b981;"></div>
+                        <span>Normal</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #fcd34d;"></div>
+                        <span>Low (Below Normal)</span>
+                    </div>
+                </div>
+            </div>
+            <div id="env-map"></div>
         </div>
 
     </main>
