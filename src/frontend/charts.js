@@ -1,24 +1,77 @@
 let chartInstance = null
 
-// Elexon BMRS colors for fuel types (approximate typical colors)
+// User-requested order from bottom to top:
+// Nuclear, Coal, Gas (CCGT), Gas (OCGT), Oil, Imports, Biomass, Wind, Solar, Hydro, Pumped Storage, Other
+const FUEL_ORDER = [
+  'Nuclear',
+  'Coal',
+  'Gas (CCGT)',
+  'Gas (OCGT)',
+  'Oil',
+  'Imports',
+  'Biomass',
+  'Wind',
+  'Solar',
+  'Hydro',
+  'Pumped Storage',
+  'Other'
+]
+
 const fuelColors = {
-  CCGT: '#f59e0b', // Amber
-  WIND: '#0ea5e9', // Sky blue
-  NUCLEAR: '#8b5cf6', // Violet
-  BIOMASS: '#22c55e', // Green
-  COAL: '#475569', // Slate
-  NPSHYD: '#0284c7', // Light blue
-  OCGT: '#ea580c', // Orange
-  OIL: '#334155', // Dark slate
-  OTHER: '#a8a29e', // Stone
-  PS: '#0369a1', // Dark blue (Pumped Storage)
-  INTELEC: '#ec4899', // Interconnectors (Pink/Purple shades)
-  INTFR: '#d946ef',
-  INTIFA2: '#c026d3',
-  INTNED: '#a21caf',
-  INTNEM: '#86198f',
-  INTNSL: '#701a75',
-  INTVKL: '#4a044e'
+  'Nuclear': '#afafaf',
+  'Coal': '#1e1e1f',
+  'Gas (CCGT)': '#349fdd',
+  'Gas (OCGT)': '#0c5f8f',
+  'Oil': '#4A545D',
+  'Imports': '#a465b4',
+  'Biomass': '#55431bb7',
+  'Wind': '#61b96f',
+  'Solar': '#e6cb54',
+  'Hydro': '#658CA8',
+  'Pumped Storage': '#4D7591',
+  'Other': '#A3A09E'
+}
+
+function getStandardizedFuelType(rawType) {
+  if (rawType.startsWith('INT') || rawType === 'INTELEC') return 'Imports';
+  if (rawType === 'CCGT') return 'Gas (CCGT)';
+  if (rawType === 'OCGT') return 'Gas (OCGT)';
+  if (rawType === 'NPSHYD') return 'Hydro';
+  if (rawType === 'PS') return 'Pumped Storage';
+  
+  const mapped = {
+    'NUCLEAR': 'Nuclear',
+    'COAL': 'Coal',
+    'OIL': 'Oil',
+    'BIOMASS': 'Biomass',
+    'WIND': 'Wind',
+    'SOLAR': 'Solar',
+    'OTHER': 'Other'
+  }[rawType];
+
+  return mapped || 'Other';
+}
+
+function lightenColor(hex, percent = 0.4) {
+  if (!hex || hex[0] !== '#') return hex;
+  let r = parseInt(hex.substring(1, 3), 16);
+  let g = parseInt(hex.substring(3, 5), 16);
+  let b = parseInt(hex.substring(5, 7), 16);
+
+  r = Math.min(255, Math.floor(r * (1 + percent)));
+  g = Math.min(255, Math.floor(g * (1 + percent)));
+  b = Math.min(255, Math.floor(b * (1 + percent)));
+
+  const toHex = (n) => n.toString(16).padStart(2, '0');
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+function hexToRgba(hex, alpha) {
+  if (!hex || hex[0] !== '#') return hex;
+  let r = parseInt(hex.substring(1, 3), 16);
+  let g = parseInt(hex.substring(3, 5), 16);
+  let b = parseInt(hex.substring(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 export async function initCharts () {
@@ -46,7 +99,6 @@ export async function initCharts () {
     }
 
     // Parse data for Chart.js
-    // The API returns an array of periods, each with a 'startTime' and 'data' array of { fuelType, generation }
     const timeLabels = []
     const datasets = {}
 
@@ -59,16 +111,22 @@ export async function initCharts () {
       timeLabels.push(new Date(period.startTime))
 
       period.data.forEach(item => {
-        if (!datasets[item.fuelType]) {
-          datasets[item.fuelType] = {
-            label: item.fuelType,
-            data: Array(sortedData.length).fill(0), // Pre-fill with 0s
-            backgroundColor: fuelColors[item.fuelType] || '#cbd5e1',
-            borderColor: fuelColors[item.fuelType] || '#cbd5e1',
+        const fuelType = getStandardizedFuelType(item.fuelType)
+        if (!datasets[fuelType]) {
+          const bgColor = fuelColors[fuelType] || '#cbd5e1';
+          const bgColorWithOpacity = hexToRgba(bgColor, 0.7);
+          const borderColor = lightenColor(bgColor, 0.2);
+          datasets[fuelType] = {
+            label: fuelType,
+            data: Array(sortedData.length).fill(0),
+            backgroundColor: bgColorWithOpacity,
+            borderColor: borderColor,
             fill: true,
             pointRadius: 0,
-            pointHoverRadius: 4,
-            borderWidth: 1
+            pointHoverRadius: 6,
+            pointHoverBorderColor: '#ffffff',
+            pointHoverBorderWidth: 2,
+            borderWidth: 3
           }
         }
       })
@@ -77,10 +135,32 @@ export async function initCharts () {
     // Now populate the data arrays
     sortedData.forEach((period, index) => {
       period.data.forEach(item => {
-        if (datasets[item.fuelType]) {
-          datasets[item.fuelType].data[index] = item.generation
+        const fuelType = getStandardizedFuelType(item.fuelType)
+        if (datasets[fuelType]) {
+          datasets[fuelType].data[index] += item.generation
         }
       })
+    })
+
+    // If a source has 0 generation across all periods, remove its border so it leaves no trace
+    Object.values(datasets).forEach(ds => {
+      const isAllZero = ds.data.every(val => val === 0);
+      if (isAllZero) {
+        ds.borderWidth = 0;
+      }
+    })
+
+    const orderedDatasets = []
+    FUEL_ORDER.forEach(fuelName => {
+      if (datasets[fuelName]) {
+        orderedDatasets.push(datasets[fuelName])
+      }
+    })
+    
+    Object.values(datasets).forEach(ds => {
+      if (!orderedDatasets.includes(ds)) {
+        orderedDatasets.push(ds)
+      }
     })
 
     // Create chart config
@@ -88,7 +168,7 @@ export async function initCharts () {
       type: 'line',
       data: {
         labels: timeLabels,
-        datasets: Object.values(datasets)
+        datasets: orderedDatasets
       },
       options: {
         responsive: true,
@@ -99,12 +179,19 @@ export async function initCharts () {
         },
         plugins: {
           tooltip: {
-            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+            backgroundColor: 'rgba(15, 23, 42, 0.7)',
             titleColor: '#f8fafc',
             bodyColor: '#cbd5e1',
             borderColor: '#334155',
-            borderWidth: 1,
+            borderWidth: 2,
             padding: 10,
+            caretPadding: 15,
+            bodySpacing: 10,
+            titleMarginBottom: 15,
+            boxPadding: 8,
+            itemSort: function(a, b) {
+              return b.datasetIndex - a.datasetIndex;
+            },
             callbacks: {
               label: function (context) {
                 let label = context.dataset.label || ''
@@ -120,6 +207,7 @@ export async function initCharts () {
           },
           legend: {
             position: 'right',
+            reverse: true,
             labels: {
               color: '#94a3b8',
               usePointStyle: true,
@@ -132,6 +220,7 @@ export async function initCharts () {
             type: 'time',
             time: {
               unit: 'hour',
+              tooltipFormat: 'D MMM YYYY, HH:mm',
               displayFormats: {
                 hour: 'HH:mm'
               }
