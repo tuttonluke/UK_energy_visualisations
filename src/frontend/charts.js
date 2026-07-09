@@ -24,12 +24,27 @@ const fuelColors = {
   'Gas (OCGT)': '#0c5f8f',
   'Oil': '#4A545D',
   'Imports': '#a465b4',
-  'Biomass': '#55431bb7',
+  'Biomass': '#774343',
   'Wind': '#61b96f',
   'Solar': '#e6cb54',
   'Hydro': '#658CA8',
   'Pumped Storage': '#4D7591',
   'Other': '#A3A09E'
+}
+
+const fuelDescriptions = {
+  'Nuclear': 'Baseline generation from nuclear fission plants.',
+  'Coal': 'Generation from coal-fired power stations. These are no longer used in the UK.',
+  'Gas (CCGT)': 'Combined Cycle Gas Turbine. More efficient gas plants used for baseload and flexible generation.',
+  'Gas (OCGT)': 'Open Cycle Gas Turbine. Less efficient but fast-responding gas plants used for peak demand.',
+  'Oil': 'Generation from oil-fired power stations. These are no longer used in the UK.',
+  'Imports': 'Net electricity imported from neighboring countries via interconnectors.',
+  'Biomass': 'Generation from burning organic materials, predominantly wood pellets.',
+  'Wind': 'Generation from onshore and offshore wind farms, including both transmission-connected and embedded generation.',
+  'Solar': 'Generation from solar photovoltaic panels, including both transmission-connected and embedded generation.',
+  'Hydro': 'Run-of-river and reservoir hydroelectric generation.',
+  'Pumped Storage': 'Hydroelectric energy storage used to meet sudden spikes in demand.',
+  'Other': 'Miscellaneous generation sources not categorized elsewhere.'
 }
 
 function getStandardizedFuelType(rawType) {
@@ -206,13 +221,7 @@ export async function initCharts () {
             }
           },
           legend: {
-            position: 'right',
-            reverse: true,
-            labels: {
-              color: '#94a3b8',
-              usePointStyle: true,
-              boxWidth: 8
-            }
+            display: false
           }
         },
         scales: {
@@ -256,6 +265,47 @@ export async function initCharts () {
     }
 
     chartInstance = new Chart(ctx, config)
+
+    // Render Custom HTML Legend
+    const legendContainer = document.getElementById('custom-legend');
+    if (legendContainer) {
+      legendContainer.innerHTML = '';
+      // Reverse the ordered datasets to match the previous legend's "reverse: true" behavior
+      const reversedDatasets = [...orderedDatasets].reverse();
+      
+      reversedDatasets.forEach(ds => {
+        const desc = fuelDescriptions[ds.label] || '';
+        
+        const item = document.createElement('div');
+        item.className = 'custom-legend-item';
+        
+        const colorBox = document.createElement('div');
+        colorBox.className = 'custom-legend-color';
+        // Use the solid border color for the legend swatch so it matches the chart borders
+        colorBox.style.backgroundColor = ds.borderColor;
+        
+        const label = document.createElement('span');
+        label.textContent = ds.label;
+        
+        item.appendChild(colorBox);
+        item.appendChild(label);
+        
+        if (desc) {
+          const infoIcon = document.createElement('div');
+          infoIcon.className = 'info-icon';
+          infoIcon.textContent = 'i';
+          
+          const tooltip = document.createElement('span');
+          tooltip.className = 'tooltip-text';
+          tooltip.textContent = desc;
+          
+          infoIcon.appendChild(tooltip);
+          item.appendChild(infoIcon);
+        }
+        
+        legendContainer.appendChild(item);
+      });
+    }
   } catch (error) {
     console.error('Failed to load chart data:', error)
   }

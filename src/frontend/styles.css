@@ -280,3 +280,71 @@ body {
     min-height: 400px;
     position: relative;
 }
+
+/* Custom Chart Legend */
+.custom-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+.custom-legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.info-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-color: var(--border-color);
+    color: var(--text-main);
+    font-size: 10px;
+    font-weight: bold;
+    cursor: help;
+    position: relative;
+    margin-left: 6px;
+    flex-shrink: 0;
+}
+.info-icon .tooltip-text {
+    visibility: hidden;
+    width: 220px;
+    background-color: rgba(15, 23, 42, 0.95);
+    color: var(--text-main);
+    text-align: left;
+    border-radius: 6px;
+    padding: 10px;
+    position: absolute;
+    z-index: 100;
+    top: 50%;
+    right: 100%;
+    transform: translateY(-50%);
+    margin-right: 10px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    border: 1px solid var(--border-color);
+    font-weight: normal;
+    line-height: 1.4;
+    font-size: 0.75rem;
+    pointer-events: none;
+}
+/* Arrow for tooltip */
+.info-icon .tooltip-text::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    transform: translateY(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent transparent var(--border-color);
+}
+.info-icon:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}

@@ -48,7 +48,13 @@
                     <p>Live outturn generation across Great Britain (BMRS)</p>
                 </div>
                 <div class="chart-card">
-                    <canvas id="generationChart"></canvas>
+                    <div style="display: flex; height: 100%; gap: 20px;">
+                        <div style="flex: 1; position: relative; min-width: 0;">
+                            <canvas id="generationChart"></canvas>
+                        </div>
+                        <div id="custom-legend" style="width: 180px; display: flex; flex-direction: column; gap: 8px; justify-content: center; overflow-y: visible;">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
