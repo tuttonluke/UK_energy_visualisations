@@ -1,5 +1,6 @@
 scratch
 .vscode
+src/backend/mapbox_quota.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -219,3 +220,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Node Modules
+src/frontend/node_modules

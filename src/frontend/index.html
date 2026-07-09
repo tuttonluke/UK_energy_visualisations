@@ -9,13 +9,8 @@
     <link rel="stylesheet" href="styles.css">
 
     <!-- Mapbox GL JS & CSS -->
-    <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
-    <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.26.0/mapbox-gl.css" rel="stylesheet">
 
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.1/dist/chartjs-adapter-moment.min.js"></script>
 </head>
 <body>
 
@@ -45,7 +40,7 @@
             <div id="charts-container">
                 <div class="chart-header">
                     <h2>Generation by Fuel Type</h2>
-                    <p>Live outturn generation across Great Britain (BMRS)</p>
+                    <p>Live outturn generation across Great Britain (BMRS) <span id="chart-status" style="color: #ef4444; font-weight: bold; margin-left: 10px;"></span></p>
                 </div>
                 <div class="chart-card">
                     <div style="display: flex; height: 100%; gap: 20px;">

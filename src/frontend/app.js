@@ -1,26 +1,21 @@
 import { initCharts } from './charts.js'
-import { initMap } from './map.js'
-import { initEnvMap } from './envMap.js'
+import { initMap, updateMapData } from './map.js'
+import { initEnvMap, updateEnvMapData } from './envMap.js'
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Tab Switching Logic
   const navItems = document.querySelectorAll('.nav-item')
   const tabContents = document.querySelectorAll('.tab-content')
 
   navItems.forEach(item => {
     item.addEventListener('click', () => {
-      // Remove active class from all nav items and tabs
       navItems.forEach(nav => nav.classList.remove('active'))
       tabContents.forEach(tab => tab.classList.remove('active'))
 
-      // Add active class to clicked nav item
       item.classList.add('active')
 
-      // Show corresponding tab content
       const targetId = item.getAttribute('data-target')
       document.getElementById(targetId).classList.add('active')
 
-      // Initialize content if needed
       if (targetId === 'tab-generation') {
         initCharts()
       } else if (targetId === 'tab-maps') {
@@ -31,6 +26,13 @@ document.addEventListener('DOMContentLoaded', () => {
     })
   })
 
-  // Initialize the default tab
+  // Only init the default visible tab — maps defer until their tab is clicked
   initCharts()
+
+  // Polling every 5 minutes (300,000 ms)
+  setInterval(() => {
+    initCharts()
+    updateMapData()
+    updateEnvMapData()
+  }, 300_000)
 })

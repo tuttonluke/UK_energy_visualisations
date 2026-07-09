@@ -1,3 +1,7 @@
+import { fetchGenerationSummary } from './api.js'
+import Chart from 'chart.js/auto'
+import 'chartjs-adapter-date-fns'
+
 let chartInstance = null
 
 // User-requested order from bottom to top:
@@ -90,13 +94,18 @@ function hexToRgba(hex, alpha) {
 }
 
 export async function initCharts () {
-  if (chartInstance) return // Already initialized
+  const canvas = document.getElementById('generationChart')
+  if (!canvas) return
 
-  const ctx = document.getElementById('generationChart').getContext('2d')
+  const ctx = canvas.getContext('2d')
+  const statusEl = document.getElementById('chart-status')
+  if (statusEl) statusEl.innerText = ''
 
   try {
-    const response = await fetch('http://127.0.0.1:8000/api/generation/summary')
-    const data = await response.json()
+    const data = await fetchGenerationSummary()
+    if (!data) {
+        throw new Error('No data received from API')
+    }
 
     let sortedData
     if (Array.isArray(data)) {
@@ -147,7 +156,6 @@ export async function initCharts () {
       })
     })
 
-    // Now populate the data arrays
     sortedData.forEach((period, index) => {
       period.data.forEach(item => {
         const fuelType = getStandardizedFuelType(item.fuelType)
@@ -157,7 +165,6 @@ export async function initCharts () {
       })
     })
 
-    // If a source has 0 generation across all periods, remove its border so it leaves no trace
     Object.values(datasets).forEach(ds => {
       const isAllZero = ds.data.every(val => val === 0);
       if (isAllZero) {
@@ -177,6 +184,13 @@ export async function initCharts () {
         orderedDatasets.push(ds)
       }
     })
+
+    if (chartInstance) {
+      chartInstance.data.labels = timeLabels
+      chartInstance.data.datasets = orderedDatasets
+      chartInstance.update('none') // update without animating everything again
+      return
+    }
 
     // Create chart config
     const config = {
@@ -229,7 +243,7 @@ export async function initCharts () {
             type: 'time',
             time: {
               unit: 'hour',
-              tooltipFormat: 'D MMM YYYY, HH:mm',
+              tooltipFormat: 'd MMM yyyy, HH:mm',
               displayFormats: {
                 hour: 'HH:mm'
               }
@@ -266,11 +280,9 @@ export async function initCharts () {
 
     chartInstance = new Chart(ctx, config)
 
-    // Render Custom HTML Legend
     const legendContainer = document.getElementById('custom-legend');
     if (legendContainer) {
       legendContainer.innerHTML = '';
-      // Reverse the ordered datasets to match the previous legend's "reverse: true" behavior
       const reversedDatasets = [...orderedDatasets].reverse();
       
       reversedDatasets.forEach(ds => {
@@ -281,7 +293,6 @@ export async function initCharts () {
         
         const colorBox = document.createElement('div');
         colorBox.className = 'custom-legend-color';
-        // Use the solid border color for the legend swatch so it matches the chart borders
         colorBox.style.backgroundColor = ds.borderColor;
         
         const label = document.createElement('span');
@@ -308,5 +319,7 @@ export async function initCharts () {
     }
   } catch (error) {
     console.error('Failed to load chart data:', error)
+    const statusEl = document.getElementById('chart-status')
+    if (statusEl) statusEl.innerText = '(Connection Failed)'
   }
 }
