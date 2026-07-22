@@ -110,7 +110,7 @@ app.include_router(river_levels.router, prefix="/api/environment", tags=["enviro
 
 # API endpoints
 @app.get("/api/proxy/mapbox")
-@limiter.limit("500/minute")
+@limiter.limit("2000/minute")
 async def proxy_mapbox(
     request: Request, path: str, client: httpx.AsyncClient = Depends(get_client)
 ):
