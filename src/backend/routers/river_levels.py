@@ -1,14 +1,17 @@
-from fastapi import APIRouter, HTTPException, Request
+from dependencies import get_cache_manager
+from fastapi import APIRouter, Depends, HTTPException, Request
 from rate_limiter import limiter
 from schemas import RiverLevelsResponse
+from services.cache_manager import CacheManager
 
 router = APIRouter()
 
 
 @router.get("/river_levels", response_model=RiverLevelsResponse)
 @limiter.limit("60/minute")
-async def get_river_levels(request: Request):
-    cache_manager = request.app.state.cache_manager
+async def get_river_levels(
+    request: Request, cache_manager: CacheManager = Depends(get_cache_manager)
+):
     stations_map = await cache_manager.get_river_stations()
     readings = await cache_manager.get_river_readings()
 
