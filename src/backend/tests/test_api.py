@@ -1,21 +1,15 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 
-def test_proxy_mapbox_endpoint_missing_url(client):
+def test_proxy_mapbox_endpoint_missing_path(client):
     response = client.get("/api/proxy/mapbox")
-    assert response.status_code == 422  # Missing required 'url' parameter
-
-
-def test_proxy_mapbox_endpoint_invalid_domain(client):
-    response = client.get("/api/proxy/mapbox?url=https://example.com/tiles")
-    assert response.status_code == 400
-    assert response.json() == {"detail": "Invalid proxy URL"}
+    assert response.status_code == 422  # Missing required 'path' parameter
 
 
 @patch("os.getenv", return_value=None)
 def test_proxy_mapbox_endpoint_missing_token(mock_getenv, client):
     response = client.get(
-        "/api/proxy/mapbox?url=https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/1/0/0.mvt"
+        "/api/proxy/mapbox?path=/v4/mapbox.mapbox-streets-v8/1/0/0.mvt"
     )
     assert response.status_code == 500
     assert response.json() == {"detail": "Mapbox token not configured"}
@@ -25,7 +19,7 @@ def test_proxy_mapbox_endpoint_missing_token(mock_getenv, client):
 @patch("main.quota_service.check_and_increment_quota", return_value=False)
 def test_proxy_mapbox_endpoint_quota_exceeded(mock_quota, mock_getenv, client):
     response = client.get(
-        "/api/proxy/mapbox?url=https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/1/0/0.mvt"
+        "/api/proxy/mapbox?path=/v4/mapbox.mapbox-streets-v8/1/0/0.mvt"
     )
     assert response.status_code == 429
     assert response.json() == {"detail": "Mapbox monthly quota exceeded"}
@@ -49,7 +43,7 @@ def test_proxy_mapbox_endpoint_success(mock_send, mock_quota, mock_getenv, clien
     mock_send.return_value = mock_response
 
     response = client.get(
-        "/api/proxy/mapbox?url=https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/1/0/0.mvt"
+        "/api/proxy/mapbox?path=/v4/mapbox.mapbox-streets-v8/1/0/0.mvt"
     )
 
     assert response.status_code == 200

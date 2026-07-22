@@ -1,11 +1,10 @@
 import logging
 import os
 from contextlib import asynccontextmanager
-from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 import httpx
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import StreamingResponse
@@ -14,6 +13,7 @@ from rate_limiter import limiter
 from routers import generation, river_levels, solar
 from services import quota_service
 from services.cache_manager import CacheManager
+from services.http_client import get_client
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
@@ -111,36 +111,21 @@ app.include_router(river_levels.router, prefix="/api/environment", tags=["enviro
 # API endpoints
 @app.get("/api/proxy/mapbox")
 @limiter.limit("500/minute")
-async def proxy_mapbox(request: Request, url: str):
+async def proxy_mapbox(
+    request: Request, path: str, client: httpx.AsyncClient = Depends(get_client)
+):
     if not await quota_service.check_and_increment_quota():
         raise HTTPException(status_code=429, detail="Mapbox monthly quota exceeded")
-
-    parsed = urlparse(url)
-    if parsed.netloc != "api.mapbox.com":
-        raise HTTPException(status_code=400, detail="Invalid proxy URL")
 
     token = os.getenv("MAPBOX_ACCESS_TOKEN")
     if not token:
         raise HTTPException(status_code=500, detail="Mapbox token not configured")
 
-    query = parse_qs(parsed.query)
-    query["access_token"] = [token]
-    new_query = urlencode(query, doseq=True)
-    new_url = urlunparse(
-        (
-            parsed.scheme,
-            parsed.netloc,
-            parsed.path,
-            parsed.params,
-            new_query,
-            parsed.fragment,
-        )
-    )
-
-    # Use shared HTTP client for connection pooling
-    from services.http_client import get_client
-
-    client = get_client()
+    base_url = httpx.URL("https://api.mapbox.com")
+    params = dict(request.query_params)
+    params.pop("path", None)
+    params["access_token"] = token
+    new_url = base_url.copy_with(path=path, params=params)
 
     # Forward browser cache headers so Mapbox can return 304 Not Modified
     forward_headers = {

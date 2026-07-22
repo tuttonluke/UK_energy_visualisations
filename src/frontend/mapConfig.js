@@ -6,8 +6,14 @@ export const MAP_CONFIG = {
   zoom: 5.5,
   transformRequest: (url, resourceType) => {
     if (url.startsWith('https://api.mapbox.com/')) {
+      const urlObj = new URL(url);
+      const proxyUrl = new URL(`${BACKEND_URL}/api/proxy/mapbox`);
+      proxyUrl.searchParams.set('path', urlObj.pathname);
+      urlObj.searchParams.forEach((value, key) => {
+        proxyUrl.searchParams.append(key, value);
+      });
       return {
-        url: `${BACKEND_URL}/api/proxy/mapbox?url=${encodeURIComponent(url)}`
+        url: proxyUrl.toString()
       }
     }
   }

@@ -64,10 +64,11 @@ class CacheManager:
             await asyncio.sleep(300)
             stations_timer += 300
 
-            # Update stations every 24 hours (86400 seconds)
-            if stations_timer >= 86400:
+            # Update stations every 24 hours (86400 seconds), OR if they failed to initialize
+            if stations_timer >= 86400 or not self._initialized["river_stations"]:
                 await self.update_river_stations()
-                stations_timer = 0
+                if self._initialized["river_stations"]:
+                    stations_timer = 0
 
     # Getters
     async def get_generation_summary(self):
