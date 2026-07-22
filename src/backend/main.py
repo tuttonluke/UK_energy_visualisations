@@ -16,9 +16,10 @@ from services.cache_manager import CacheManager
 from services.http_client import get_client
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 load_dotenv()
+
+MAPBOX_ACCESS_TOKEN = os.getenv("MAPBOX_ACCESS_TOKEN")
 
 logging.basicConfig(
     level=logging.INFO,
@@ -75,29 +76,12 @@ app.add_middleware(
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
 
-class CacheHeaderMiddleware:
-    def __init__(self, app: ASGIApp):
-        self.app = app
-
-    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        if scope["type"] != "http":
-            return await self.app(scope, receive, send)
-
-        async def send_wrapper(message: Message) -> None:
-            if message["type"] == "http.response.start":
-                path = scope.get("path", "")
-                if path.startswith("/static/"):
-                    headers = message.get("headers", [])
-                    # Only append if no cache-control header already exists
-                    if not any(k.lower() == b"cache-control" for k, _ in headers):
-                        headers.append((b"cache-control", b"public, max-age=86400"))
-                    message["headers"] = headers
-            await send(message)
-
-        await self.app(scope, receive, send_wrapper)
-
-
-app.add_middleware(CacheHeaderMiddleware)
+@app.middleware("http")
+async def add_cache_control_header(request: Request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith("/static/") and "Cache-Control" not in response.headers:
+        response.headers["Cache-Control"] = "public, max-age=86400"
+    return response
 
 # Serve static files (like GeoJSON) with compression support
 static_dir = os.path.join(os.path.dirname(__file__), "static")
@@ -117,14 +101,13 @@ async def proxy_mapbox(
     if not await quota_service.check_and_increment_quota():
         raise HTTPException(status_code=429, detail="Mapbox monthly quota exceeded")
 
-    token = os.getenv("MAPBOX_ACCESS_TOKEN")
-    if not token:
+    if not MAPBOX_ACCESS_TOKEN:
         raise HTTPException(status_code=500, detail="Mapbox token not configured")
 
     base_url = httpx.URL("https://api.mapbox.com")
     params = dict(request.query_params)
     params.pop("path", None)
-    params["access_token"] = token
+    params["access_token"] = MAPBOX_ACCESS_TOKEN
     new_url = base_url.copy_with(path=path, params=params)
 
     # Forward browser cache headers so Mapbox can return 304 Not Modified

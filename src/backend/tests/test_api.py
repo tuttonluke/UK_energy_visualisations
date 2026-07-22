@@ -6,8 +6,8 @@ def test_proxy_mapbox_endpoint_missing_path(client):
     assert response.status_code == 422  # Missing required 'path' parameter
 
 
-@patch("os.getenv", return_value=None)
-def test_proxy_mapbox_endpoint_missing_token(mock_getenv, client):
+@patch("main.MAPBOX_ACCESS_TOKEN", None)
+def test_proxy_mapbox_endpoint_missing_token(client):
     response = client.get(
         "/api/proxy/mapbox?path=/v4/mapbox.mapbox-streets-v8/1/0/0.mvt"
     )
@@ -15,9 +15,9 @@ def test_proxy_mapbox_endpoint_missing_token(mock_getenv, client):
     assert response.json() == {"detail": "Mapbox token not configured"}
 
 
-@patch("os.getenv", return_value="fake_token")
+@patch("main.MAPBOX_ACCESS_TOKEN", "fake_token")
 @patch("main.quota_service.check_and_increment_quota", return_value=False)
-def test_proxy_mapbox_endpoint_quota_exceeded(mock_quota, mock_getenv, client):
+def test_proxy_mapbox_endpoint_quota_exceeded(mock_quota, client):
     response = client.get(
         "/api/proxy/mapbox?path=/v4/mapbox.mapbox-streets-v8/1/0/0.mvt"
     )
@@ -25,10 +25,10 @@ def test_proxy_mapbox_endpoint_quota_exceeded(mock_quota, mock_getenv, client):
     assert response.json() == {"detail": "Mapbox monthly quota exceeded"}
 
 
-@patch("os.getenv", return_value="fake_token")
+@patch("main.MAPBOX_ACCESS_TOKEN", "fake_token")
 @patch("main.quota_service.check_and_increment_quota", return_value=True)
 @patch("httpx.AsyncClient.send")
-def test_proxy_mapbox_endpoint_success(mock_send, mock_quota, mock_getenv, client):
+def test_proxy_mapbox_endpoint_success(mock_send, mock_quota, client):
 
     # Mock httpx response stream
     mock_response = MagicMock()
