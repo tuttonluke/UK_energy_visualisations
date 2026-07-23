@@ -30,6 +30,12 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
 class EndpointFilter(logging.Filter):
+    """
+    Custom logging filter to suppress excessive Uvicorn access logs.
+    Specifically targets and hides logs from the mapbox proxy endpoint,
+    which can generate hundreds of entries per minute during normal map usage.
+    """
+
     def filter(self, record: logging.LogRecord) -> bool:
         return "/api/proxy/mapbox" not in record.getMessage()
 
@@ -41,6 +47,17 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """
+    Manages the application lifecycle.
+
+    Startup:
+    - Initializes the CacheManager and attaches it to app.state.
+    - Starts background tasks to pre-fetch and periodically update data from external APIs.
+
+    Shutdown:
+    - Cancels background update tasks gracefully.
+    - Closes the global HTTPX client connection pool.
+    """
     from services.http_client import close_client
 
     cache_manager = CacheManager()
@@ -78,10 +95,19 @@ app.add_middleware(GZipMiddleware, minimum_size=500)
 
 @app.middleware("http")
 async def add_cache_control_header(request: Request, call_next):
+    """
+    Middleware that automatically injects Cache-Control headers into static file responses.
+    This ensures browsers cache static assets (like large GeoJSON files) for 24 hours,
+    reducing unnecessary bandwidth and improving load times.
+    """
     response = await call_next(request)
-    if request.url.path.startswith("/static/") and "Cache-Control" not in response.headers:
+    if (
+        request.url.path.startswith("/static/")
+        and "Cache-Control" not in response.headers
+    ):
         response.headers["Cache-Control"] = "public, max-age=86400"
     return response
+
 
 # Serve static files (like GeoJSON) with compression support
 static_dir = os.path.join(os.path.dirname(__file__), "static")
@@ -98,6 +124,16 @@ app.include_router(river_levels.router, prefix="/api/environment", tags=["enviro
 async def proxy_mapbox(
     request: Request, path: str, client: httpx.AsyncClient = Depends(get_client)
 ):
+    """
+    Proxies requests to the Mapbox API to keep the access token hidden from the frontend.
+
+    Features:
+    - Prevents Server-Side Request Forgery (SSRF) by only accepting a 'path' parameter,
+      forcing the base URL to always be https://api.mapbox.com.
+    - Tracks API usage against a monthly quota to prevent billing surprises.
+    - Uses HTTP streaming to efficiently pipe Mapbox tiles directly back to the client
+      without loading them entirely into server memory first.
+    """
     if not await quota_service.check_and_increment_quota():
         raise HTTPException(status_code=429, detail="Mapbox monthly quota exceeded")
 
