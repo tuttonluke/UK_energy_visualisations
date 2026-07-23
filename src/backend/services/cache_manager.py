@@ -57,7 +57,7 @@ class CacheManager:
                 )
             except asyncio.CancelledError:
                 raise
-            except Exception as e:
+            except Exception:
                 logger.exception("Error in background fetch loop")
 
             # Wait 5 minutes
@@ -102,7 +102,7 @@ class CacheManager:
                     self._cache["generation"] = aggregated_data
                     self._initialized["generation"] = True
                     logger.info("Generation cache updated.")
-            except Exception as e:
+            except Exception:
                 logger.exception("Error updating generation cache")
 
     async def update_solar(self):
@@ -113,7 +113,7 @@ class CacheManager:
                     self._cache["solar"] = data
                     self._initialized["solar"] = True
                     logger.info("Solar cache updated.")
-            except Exception as e:
+            except Exception:
                 logger.exception("Error updating solar cache")
 
     async def update_river_stations(self):
@@ -124,7 +124,7 @@ class CacheManager:
                     self._cache["river_stations"] = stations
                     self._initialized["river_stations"] = True
                     logger.info(f"River stations cache updated ({len(stations)}).")
-            except Exception as e:
+            except Exception:
                 logger.exception("Error updating river stations cache")
 
     async def update_river_readings(self):
@@ -135,5 +135,5 @@ class CacheManager:
                     self._cache["river_readings"] = readings
                     self._initialized["river_readings"] = True
                     logger.info(f"River readings cache updated ({len(readings)}).")
-            except Exception as e:
+            except Exception:
                 logger.exception("Error updating river readings cache")
