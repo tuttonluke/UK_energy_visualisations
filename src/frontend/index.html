@@ -10,6 +10,9 @@
 
     <!-- Mapbox GL JS & CSS -->
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.26.0/mapbox-gl.css" rel="stylesheet">
+    
+    <!-- Turf.js for spatial calculations -->
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
 </head>
 <body>
@@ -78,7 +81,32 @@
                         <span id="status-text">Connecting...</span>
                     </div>
                 </div>
+
+                <!-- Normalization Toggle -->
+                <div class="glass-panel map-controls">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="normalize-toggle" checked>
+                        <span class="slider round"></span>
+                        <span class="toggle-label">Normalise by Area (MW/km²)</span>
+                    </label>
+                </div>
+                
+                <!-- Solar Map Legend -->
+                <div id="solar-legend" class="glass-panel">
+                    <div id="solar-legend-title" class="stats-title" style="margin-bottom: 8px;">Solar Output Density</div>
+                    <div id="solar-legend-scale" style="display: flex; flex-direction: column; gap: 4px;">
+                        <!-- Injected dynamically by JS -->
+                    </div>
+                </div>
             </div>
+
+            <!-- Reset Map Button -->
+            <button id="solar-map-reset" class="glass-panel map-reset-btn" title="Reset Map View">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                    <path d="M3 3v5h5"></path>
+                </svg>
+            </button>
 
             <!-- Map Container -->
             <div id="map"></div>
@@ -116,6 +144,13 @@
                     </div>
                 </div>
             </div>
+            <!-- Reset Map Button -->
+            <button id="env-map-reset" class="glass-panel map-reset-btn" title="Reset Map View">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                    <path d="M3 3v5h5"></path>
+                </svg>
+            </button>
             <div id="env-map"></div>
         </div>
 

@@ -61,3 +61,19 @@ def test_solar_france_endpoint(client):
     assert isinstance(data, dict)
     assert data["totalGen"] == 50
     assert data["75"] == 50
+
+
+def test_solar_germany_endpoint_empty_cache(empty_client):
+    response = empty_client.get("/api/solar/solar/germany")
+    assert response.status_code == 503
+    assert response.json() == {
+        "detail": "German solar data is currently unavailable. Please try again later."
+    }
+
+
+def test_solar_germany_endpoint(client):
+    response = client.get("/api/solar/solar/germany")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, dict)
+    assert data["totalGen"] == 120

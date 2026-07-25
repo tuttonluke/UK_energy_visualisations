@@ -18,6 +18,7 @@ from services.generation_aggregator import GenerationAggregator
 from services.http_client import get_client
 from services.orchestrator import BackgroundOrchestrator
 from services.solar_data.france_rte import fetch_rte_live
+from services.solar_data.germany_energy_charts import fetch_germany_live
 from services.solar_data.uk_pvlive import fetch_pvlive_live
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -54,6 +55,7 @@ logger = logging.getLogger(__name__)
 # Solar
 solar_uk_store = CacheStore("solar_uk", fetch_pvlive_live)
 solar_fr_store = CacheStore("solar_fr", fetch_rte_live)
+solar_de_store = CacheStore("solar_de", fetch_germany_live)
 
 # Generation plots
 generation_store = CacheStore("generation", GenerationAggregator.fetch_aggregated_data)
@@ -68,6 +70,7 @@ orchestrator = BackgroundOrchestrator()
 # Solar
 orchestrator.register("solar_uk", solar_uk_store.update, 300)
 orchestrator.register("solar_fr", solar_fr_store.update, 300)
+orchestrator.register("solar_de", solar_de_store.update, 300)
 
 # Generation plots
 orchestrator.register("generation", generation_store.update, 300)
@@ -94,6 +97,7 @@ async def lifespan(app: FastAPI):
 
     app.state.solar_uk_store = solar_uk_store
     app.state.solar_fr_store = solar_fr_store
+    app.state.solar_de_store = solar_de_store
     app.state.generation_store = generation_store
     app.state.river_stations_store = river_stations_store
     app.state.river_readings_store = river_readings_store

@@ -207,6 +207,19 @@ export async function initEnvMap () {
   envMapInstance.on('load', () => {
     loadEnvMapData()
   })
+
+  // Reset button listener
+  const resetBtn = document.getElementById('env-map-reset')
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      envMapInstance.flyTo({
+        center: MAP_CONFIG.center,
+        zoom: MAP_CONFIG.zoom,
+        pitch: 0,
+        bearing: 0
+      })
+    })
+  }
 }
 
 /**

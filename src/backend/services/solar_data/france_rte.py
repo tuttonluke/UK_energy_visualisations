@@ -41,7 +41,7 @@ async def fetch_rte_history(min_dt, max_dt):
 
 async def fetch_rte_live():
     """Fetches regional live solar data for France from ODRE."""
-    url = "https://odre.opendatasoft.com/api/explore/v2.1/catalog/datasets/eco2mix-regional-tr/records?limit=12&order_by=date_heure%20DESC&where=solaire%20is%20not%20null"
+    url = "https://odre.opendatasoft.com/api/explore/v2.1/catalog/datasets/eco2mix-regional-tr/records?limit=100&order_by=date_heure%20DESC&where=solaire%20is%20not%20null"
     client = get_client()
     try:
         res = await client.get(url, timeout=10.0)
@@ -49,16 +49,17 @@ async def fetch_rte_live():
         data = res.json()
 
         new_data = {}
-        total_generation_mw = 0
 
         for record in data.get("results", []):
             insee_code = record.get("code_insee_region")
             solar_gen = record.get("solaire")
 
             if insee_code and solar_gen is not None and solar_gen >= 0:
-                new_data[insee_code] = solar_gen
-                total_generation_mw += solar_gen
+                # Keep only the most recent reading for each region
+                if insee_code not in new_data:
+                    new_data[insee_code] = solar_gen
 
+        total_generation_mw = sum(new_data.values())
         new_data["totalGen"] = round(total_generation_mw, 1)
         return new_data
     except Exception as e:

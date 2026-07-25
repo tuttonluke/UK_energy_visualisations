@@ -8,6 +8,7 @@ from services.environment_agency import fetch_ea_readings, fetch_ea_stations
 from services.generation_aggregator import GenerationAggregator
 from services.solar_data.france_rte import fetch_rte_live
 from services.solar_data.uk_pvlive import fetch_pvlive_live
+from services.solar_data.germany_energy_charts import fetch_germany_live
 
 
 @pytest.fixture
@@ -29,6 +30,7 @@ def client():
         # Initialize CacheStores without background updates
         app_inst.state.solar_uk_store = CacheStore("solar_uk", fetch_pvlive_live)
         app_inst.state.solar_fr_store = CacheStore("solar_fr", fetch_rte_live)
+        app_inst.state.solar_de_store = CacheStore("solar_de", fetch_germany_live)
         app_inst.state.generation_store = CacheStore(
             "generation", GenerationAggregator.fetch_aggregated_data
         )
@@ -46,6 +48,9 @@ def client():
         app_inst.state.solar_fr_store._data = {"totalGen": 50, "75": 50}
         app_inst.state.solar_fr_store._initialized = True
 
+        app_inst.state.solar_de_store._data = {"totalGen": 120}
+        app_inst.state.solar_de_store._initialized = True
+
         app_inst.state.generation_store._data = [
             {"startTime": "2026-07-08T12:00:00Z", "data": []}
         ]
@@ -54,6 +59,7 @@ def client():
         yield
         app_inst.state.solar_uk_store = None
         app_inst.state.solar_fr_store = None
+        app_inst.state.solar_de_store = None
         app_inst.state.generation_store = None
         app_inst.state.river_stations_store = None
         app_inst.state.river_readings_store = None
@@ -73,6 +79,7 @@ def empty_client():
     async def test_lifespan(app_inst):
         app_inst.state.solar_uk_store = CacheStore("solar_uk", fetch_pvlive_live)
         app_inst.state.solar_fr_store = CacheStore("solar_fr", fetch_rte_live)
+        app_inst.state.solar_de_store = CacheStore("solar_de", fetch_germany_live)
         app_inst.state.generation_store = CacheStore(
             "generation", GenerationAggregator.fetch_aggregated_data
         )
@@ -86,6 +93,7 @@ def empty_client():
         yield
         app_inst.state.solar_uk_store = None
         app_inst.state.solar_fr_store = None
+        app_inst.state.solar_de_store = None
         app_inst.state.generation_store = None
         app_inst.state.river_stations_store = None
         app_inst.state.river_readings_store = None
