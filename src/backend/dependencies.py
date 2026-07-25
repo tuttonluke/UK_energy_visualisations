@@ -6,6 +6,10 @@ def get_solar_uk_store(request: Request) -> CacheStore:
     return request.app.state.solar_uk_store
 
 
+def get_solar_fr_store(request: Request) -> CacheStore:
+    return request.app.state.solar_fr_store
+
+
 def get_generation_store(request: Request) -> CacheStore:
     return request.app.state.generation_store
 

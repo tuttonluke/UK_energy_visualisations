@@ -17,7 +17,8 @@ from services.environment_agency import fetch_ea_readings, fetch_ea_stations
 from services.generation_aggregator import GenerationAggregator
 from services.http_client import get_client
 from services.orchestrator import BackgroundOrchestrator
-from services.pvlive import fetch_pvlive_live
+from services.solar_data.france_rte import fetch_rte_live
+from services.solar_data.uk_pvlive import fetch_pvlive_live
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
@@ -49,16 +50,29 @@ logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
 logger = logging.getLogger(__name__)
 
 
-# Initialize Stores
+# --- Initialize Stores ---
+# Solar
 solar_uk_store = CacheStore("solar_uk", fetch_pvlive_live)
+solar_fr_store = CacheStore("solar_fr", fetch_rte_live)
+
+# Generation plots
 generation_store = CacheStore("generation", GenerationAggregator.fetch_aggregated_data)
+
+# Environment
 river_stations_store = CacheStore("river_stations", fetch_ea_stations)
 river_readings_store = CacheStore("river_readings", fetch_ea_readings)
 
-# Initialize Orchestrator
+# --- Initialize Orchestrator ---
 orchestrator = BackgroundOrchestrator()
+
+# Solar
 orchestrator.register("solar_uk", solar_uk_store.update, 300)
+orchestrator.register("solar_fr", solar_fr_store.update, 300)
+
+# Generation plots
 orchestrator.register("generation", generation_store.update, 300)
+
+# Environment
 orchestrator.register("river_readings", river_readings_store.update, 300)
 orchestrator.register("river_stations", river_stations_store.update, 86400)
 
@@ -79,6 +93,7 @@ async def lifespan(app: FastAPI):
     from services.http_client import close_client
 
     app.state.solar_uk_store = solar_uk_store
+    app.state.solar_fr_store = solar_fr_store
     app.state.generation_store = generation_store
     app.state.river_stations_store = river_stations_store
     app.state.river_readings_store = river_readings_store

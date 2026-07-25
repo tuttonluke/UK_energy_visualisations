@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 from services.elexon import fetch_bmrs_generation
 from services.neso import fetch_neso_embedded_wind
-from services.pvlive import fetch_pvlive_history
+from services.solar_data.uk_pvlive import fetch_pvlive_history
 
 logger = logging.getLogger(__name__)
 

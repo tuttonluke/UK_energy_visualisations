@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from services.pvlive import (
+from services.solar_data.uk_pvlive import (
     fetch_pes_region_data,
     fetch_pvlive_history,
     fetch_pvlive_live,
@@ -10,7 +10,7 @@ from services.pvlive import (
 
 
 @pytest.mark.asyncio
-@patch("services.pvlive.get_client")
+@patch("services.solar_data.uk_pvlive.get_client")
 async def test_fetch_pvlive_history_success(mock_get_client):
     mock_client = MagicMock()
     mock_response = MagicMock()
@@ -32,7 +32,7 @@ async def test_fetch_pvlive_history_success(mock_get_client):
 
 
 @pytest.mark.asyncio
-@patch("services.pvlive.get_client")
+@patch("services.solar_data.uk_pvlive.get_client")
 async def test_fetch_pvlive_history_error(mock_get_client):
     mock_client = MagicMock()
     mock_client.get = AsyncMock(side_effect=Exception("API Error"))
@@ -63,8 +63,8 @@ async def test_fetch_pes_region_data_success():
 
 
 @pytest.mark.asyncio
-@patch("services.pvlive.fetch_pes_region_data")
-@patch("services.pvlive.get_client")
+@patch("services.solar_data.uk_pvlive.fetch_pes_region_data")
+@patch("services.solar_data.uk_pvlive.get_client")
 async def test_fetch_pvlive_live_success(mock_get_client, mock_fetch_pes):
     # Mock PES responses
     # Returns (pes_id_str, generation)

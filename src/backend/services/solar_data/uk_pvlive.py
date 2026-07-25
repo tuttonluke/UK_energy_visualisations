@@ -44,17 +44,21 @@ async def fetch_pes_region_data(client, pes_id: int):
 
 
 async def fetch_pvlive_live():
-    new_data = {}
-    total_generation_mw = 0
+    try:
+        new_data = {}
+        total_generation_mw = 0
 
-    client = get_client()
-    tasks = [fetch_pes_region_data(client, pes_id) for pes_id in range(10, 24)]
-    results = await asyncio.gather(*tasks)
+        client = get_client()
+        tasks = [fetch_pes_region_data(client, pes_id) for pes_id in range(10, 24)]
+        results = await asyncio.gather(*tasks)
 
-    for pes_id_str, generation in results:
-        if generation is not None and generation > 0:
-            new_data[pes_id_str] = generation
-            total_generation_mw += generation
+        for pes_id_str, generation in results:
+            if generation is not None and generation > 0:
+                new_data[pes_id_str] = generation
+                total_generation_mw += generation
 
-    new_data["totalGen"] = round(total_generation_mw, 1)
-    return new_data
+        new_data["totalGen"] = round(total_generation_mw, 1)
+        return new_data
+    except Exception as e:
+        logger.error(f"PVLive live fetch completely failed: {e}")
+        return None

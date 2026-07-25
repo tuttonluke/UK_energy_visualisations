@@ -1,4 +1,5 @@
 import json
+import os
 
 import pyproj
 from shapely.geometry import mapping, shape
@@ -9,7 +10,6 @@ project_bng_to_wgs84 = pyproj.Transformer.from_crs(
     "EPSG:27700", "EPSG:4326", always_xy=True
 ).transform
 
-import os
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 input_file = os.path.join(script_dir, "..", "gb-dno-license-areas-2024.geojson")
@@ -26,6 +26,8 @@ for feature in geojson_data["features"]:
 
 wgs84_geojson = {"type": "FeatureCollection", "features": reprojected_features}
 
-output_filename = os.path.join(script_dir, "..", "gb-dno-license-areas-2024_wgs84.geojson")
+output_filename = os.path.join(
+    script_dir, "..", "gb-dno-license-areas-2024_wgs84.geojson"
+)
 with open(output_filename, "w") as f:
     json.dump(wgs84_geojson, f)
