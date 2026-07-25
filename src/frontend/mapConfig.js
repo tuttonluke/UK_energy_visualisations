@@ -1,9 +1,10 @@
 import { BACKEND_URL } from './api.js'
 
 export const MAP_VIEWS = {
-  DEFAULT: { center: [-0.5, 50.0], zoom: 4.0 },
+  DEFAULT: { center: [-1, 48.0], zoom: 3 },
   UK: { center: [-2.5, 54.0], zoom: 4.8 },
   FRANCE: { center: [2.2, 46.2], zoom: 4.5 },
+  GERMANY: { center: [10.4, 51.1], zoom: 4.5 },
 }
 
 export const MAP_CONFIG = {

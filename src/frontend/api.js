@@ -30,11 +30,12 @@ export async function fetchGenerationSummary() {
 }
 
 export async function fetchSolarData() {
-    const [uk, france] = await Promise.all([
+    const [uk, france, germany] = await Promise.all([
         fetchWithCheck(`${API_BASE_URL}/solar/solar`),
-        fetchWithCheck(`${API_BASE_URL}/solar/solar/france`)
+        fetchWithCheck(`${API_BASE_URL}/solar/solar/france`),
+        fetchWithCheck(`${API_BASE_URL}/solar/solar/germany`)
     ])
-    return { uk, france }
+    return { uk, france, germany }
 }
 
 export async function fetchRiverLevels() {
@@ -45,9 +46,10 @@ export async function fetchRiverLevels() {
 const STATIC_VERSION = '2024.1'
 
 export async function fetchMapRegions() {
-    const [uk, france] = await Promise.all([
+    const [uk, france, germany] = await Promise.all([
         fetchWithCheck(`${BACKEND_URL}/static/gb-dno-license-areas-2024_wgs84.topojson?v=${STATIC_VERSION}`),
-        fetchWithCheck(`${BACKEND_URL}/static/france-regions.topojson?v=${STATIC_VERSION}`)
+        fetchWithCheck(`${BACKEND_URL}/static/france-regions.topojson?v=${STATIC_VERSION}`),
+        fetchWithCheck(`${BACKEND_URL}/static/germany.topojson?v=${STATIC_VERSION}`)
     ])
-    return { uk, france }
+    return { uk, france, germany }
 }

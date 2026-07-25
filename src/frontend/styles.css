@@ -83,6 +83,25 @@ body {
     border: 1px solid rgba(245, 158, 11, 0.2);
 }
 
+.map-reset-btn {
+    position: absolute;
+    top: 1.5rem;
+    left: 1.5rem;
+    z-index: 10;
+    padding: 0.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    transition: color 0.2s, background-color 0.2s;
+}
+
+.map-reset-btn:hover {
+    color: var(--text-main);
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
 /* Main Content Area */
 #main-content {
     flex-grow: 1;
@@ -230,13 +249,16 @@ body {
 }
 
 .legend-color {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    border: 1px solid #0f172a;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    border: 1px solid var(--border-color);
 }
 
 /* Mapbox Popup Overrides */
+.mapboxgl-popup {
+    max-width: none !important;
+}
 .mapboxgl-popup-content {
     background-color: var(--bg-card) !important;
     color: var(--text-main) !important;
@@ -347,4 +369,66 @@ body {
 .info-icon:hover .tooltip-text {
     visibility: visible;
     opacity: 1;
+}
+
+/* Toggle Switch */
+.map-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.slider {
+    position: relative;
+    display: inline-block;
+    width: 34px;
+    height: 20px;
+    background-color: var(--border-color);
+    transition: .4s;
+    border-radius: 34px;
+    margin-right: 10px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: var(--text-main);
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--accent);
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px var(--accent);
+}
+
+input:checked + .slider:before {
+    transform: translateX(14px);
+}
+
+.toggle-label {
+    font-size: 0.875rem;
+    color: var(--text-main);
+    user-select: none;
 }
