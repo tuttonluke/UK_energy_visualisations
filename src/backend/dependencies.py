@@ -1,6 +1,18 @@
 from fastapi import Request
-from services.cache_manager import CacheManager
+from services.cache_store import CacheStore
 
 
-def get_cache_manager(request: Request) -> CacheManager:
-    return request.app.state.cache_manager
+def get_solar_uk_store(request: Request) -> CacheStore:
+    return request.app.state.solar_uk_store
+
+
+def get_generation_store(request: Request) -> CacheStore:
+    return request.app.state.generation_store
+
+
+def get_river_stations_store(request: Request) -> CacheStore:
+    return request.app.state.river_stations_store
+
+
+def get_river_readings_store(request: Request) -> CacheStore:
+    return request.app.state.river_readings_store

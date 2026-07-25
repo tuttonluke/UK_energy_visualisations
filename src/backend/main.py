@@ -12,8 +12,12 @@ from fastapi.staticfiles import StaticFiles
 from rate_limiter import limiter
 from routers import generation, river_levels, solar
 from services import quota_service
-from services.cache_manager import CacheManager
+from services.cache_store import CacheStore
+from services.environment_agency import fetch_ea_readings, fetch_ea_stations
+from services.generation_aggregator import GenerationAggregator
 from services.http_client import get_client
+from services.orchestrator import BackgroundOrchestrator
+from services.pvlive import fetch_pvlive_live
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
@@ -45,14 +49,28 @@ logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
 logger = logging.getLogger(__name__)
 
 
+# Initialize Stores
+solar_uk_store = CacheStore("solar_uk", fetch_pvlive_live)
+generation_store = CacheStore("generation", GenerationAggregator.fetch_aggregated_data)
+river_stations_store = CacheStore("river_stations", fetch_ea_stations)
+river_readings_store = CacheStore("river_readings", fetch_ea_readings)
+
+# Initialize Orchestrator
+orchestrator = BackgroundOrchestrator()
+orchestrator.register("solar_uk", solar_uk_store.update, 300)
+orchestrator.register("generation", generation_store.update, 300)
+orchestrator.register("river_readings", river_readings_store.update, 300)
+orchestrator.register("river_stations", river_stations_store.update, 86400)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
     Manages the application lifecycle.
 
     Startup:
-    - Initializes the CacheManager and attaches it to app.state.
-    - Starts background tasks to pre-fetch and periodically update data from external APIs.
+    - Attaches CacheStores to app.state for dependency injection.
+    - Starts the BackgroundOrchestrator to pre-fetch and periodically update data from external APIs.
 
     Shutdown:
     - Cancels background update tasks gracefully.
@@ -60,13 +78,16 @@ async def lifespan(app: FastAPI):
     """
     from services.http_client import close_client
 
-    cache_manager = CacheManager()
-    app.state.cache_manager = cache_manager
-    await cache_manager.start_background_updates()
+    app.state.solar_uk_store = solar_uk_store
+    app.state.generation_store = generation_store
+    app.state.river_stations_store = river_stations_store
+    app.state.river_readings_store = river_readings_store
+
+    await orchestrator.start()
     try:
         yield
     finally:
-        await cache_manager.stop_background_updates()
+        await orchestrator.stop()
         await close_client()
 
 

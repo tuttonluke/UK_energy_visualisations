@@ -60,23 +60,21 @@ def test_river_levels_endpoint_empty_cache(empty_client):
 
 
 def test_river_levels_endpoint(client):
-    # Setup mock data in cache
-    client.app.state.cache_manager._cache["river_stations"] = {
-        "http://measure/1": {
+    # Pre-populate stations cache to avoid timeout and test valid filtering
+    client.app.state.river_stations_store._data = {
+        "123": {
             "stationReference": "123",
             "label": "Test Station",
             "riverName": "Test River",
-            "lat": 51.0,
-            "long": -1.0,
-            "typicalRangeLow": 0.1,
-            "typicalRangeHigh": 1.0,
+            "lat": 51.5,
+            "long": -0.1,
+            "typicalRangeLow": 0.5,
+            "typicalRangeHigh": 1.5,
         }
     }
-    client.app.state.cache_manager._cache["river_readings"] = [
-        {"measure": "http://measure/1", "value": 0.5}
-    ]
-    client.app.state.cache_manager._initialized["river_stations"] = True
-    client.app.state.cache_manager._initialized["river_readings"] = True
+    client.app.state.river_readings_store._data = [{"measure": "123", "value": 0.5}]
+    client.app.state.river_stations_store._initialized = True
+    client.app.state.river_readings_store._initialized = True
 
     response = client.get("/api/environment/river_levels")
     assert response.status_code == 200

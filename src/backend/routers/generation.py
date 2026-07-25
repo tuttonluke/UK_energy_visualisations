@@ -1,20 +1,20 @@
 from typing import List
 
-from dependencies import get_cache_manager
+from dependencies import get_generation_store
 from fastapi import APIRouter, Depends, HTTPException, Request
 from rate_limiter import limiter
 from schemas import GenerationPeriod
-from services.cache_manager import CacheManager
+from services.cache_store import CacheStore
 
 router = APIRouter()
 
 
 @router.get("/summary", response_model=List[GenerationPeriod])
 @limiter.limit("60/minute")
-async def get_generation_summary(
-    request: Request, cache_manager: CacheManager = Depends(get_cache_manager)
+async def get_generation(
+    request: Request, generation_store: CacheStore = Depends(get_generation_store)
 ):
-    data = await cache_manager.get_generation_summary()
+    data = await generation_store.get()
     if data is None:
         raise HTTPException(
             status_code=503,

@@ -23,7 +23,7 @@ class GenerationAggregator:
 
             return cls._merge_data(bmrs_data, pv_dict, neso_dict)
 
-        except Exception as e:
+        except Exception:
             logger.exception("Error aggregating generation data")
             return None
 

@@ -3,12 +3,19 @@ from contextlib import asynccontextmanager
 import pytest
 from fastapi.testclient import TestClient
 from main import app
-from services.cache_manager import CacheManager
+from services.cache_store import CacheStore
+from services.environment_agency import fetch_ea_readings, fetch_ea_stations
+from services.generation_aggregator import GenerationAggregator
+from services.pvlive import fetch_pvlive_live
 
 
 @pytest.fixture
-def cache_manager():
-    return CacheManager()
+def cache_store():
+    # Helper for generic CacheStore testing
+    async def dummy_fetch():
+        return {}
+
+    return CacheStore("dummy", dummy_fetch)
 
 
 @pytest.fixture
@@ -18,20 +25,32 @@ def client():
 
     @asynccontextmanager
     async def test_lifespan(app_inst):
-        # Initialize CacheManager without background updates
-        app_inst.state.cache_manager = CacheManager()
+        # Initialize CacheStores without background updates
+        app_inst.state.solar_uk_store = CacheStore("solar_uk", fetch_pvlive_live)
+        app_inst.state.generation_store = CacheStore(
+            "generation", GenerationAggregator.fetch_aggregated_data
+        )
+        app_inst.state.river_stations_store = CacheStore(
+            "river_stations", fetch_ea_stations
+        )
+        app_inst.state.river_readings_store = CacheStore(
+            "river_readings", fetch_ea_readings
+        )
 
         # Pre-populate cache so we don't hit live APIs or get 503s
-        app_inst.state.cache_manager._cache["solar"] = {"totalGen": 100}
-        app_inst.state.cache_manager._initialized["solar"] = True
+        app_inst.state.solar_uk_store._data = {"totalGen": 100}
+        app_inst.state.solar_uk_store._initialized = True
 
-        app_inst.state.cache_manager._cache["generation"] = [
+        app_inst.state.generation_store._data = [
             {"startTime": "2026-07-08T12:00:00Z", "data": []}
         ]
-        app_inst.state.cache_manager._initialized["generation"] = True
+        app_inst.state.generation_store._initialized = True
 
         yield
-        app_inst.state.cache_manager = None
+        app_inst.state.solar_uk_store = None
+        app_inst.state.generation_store = None
+        app_inst.state.river_stations_store = None
+        app_inst.state.river_readings_store = None
 
     app.router.lifespan_context = test_lifespan
     with TestClient(app) as test_client:
@@ -46,10 +65,22 @@ def empty_client():
 
     @asynccontextmanager
     async def test_lifespan(app_inst):
-        app_inst.state.cache_manager = CacheManager()
+        app_inst.state.solar_uk_store = CacheStore("solar_uk", fetch_pvlive_live)
+        app_inst.state.generation_store = CacheStore(
+            "generation", GenerationAggregator.fetch_aggregated_data
+        )
+        app_inst.state.river_stations_store = CacheStore(
+            "river_stations", fetch_ea_stations
+        )
+        app_inst.state.river_readings_store = CacheStore(
+            "river_readings", fetch_ea_readings
+        )
         # Do not pre-populate or mark initialized to simulate updater failure
         yield
-        app_inst.state.cache_manager = None
+        app_inst.state.solar_uk_store = None
+        app_inst.state.generation_store = None
+        app_inst.state.river_stations_store = None
+        app_inst.state.river_readings_store = None
 
     app.router.lifespan_context = test_lifespan
     with TestClient(app) as test_client:

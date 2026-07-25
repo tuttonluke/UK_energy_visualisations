@@ -4,13 +4,15 @@ from unittest.mock import patch
 import pytest
 
 
+from services.cache_store import CacheStore
+from services.generation_aggregator import GenerationAggregator
+
+
 @patch("services.generation_aggregator.fetch_neso_embedded_wind")
 @patch("services.generation_aggregator.fetch_pvlive_history")
 @patch("services.generation_aggregator.fetch_bmrs_generation")
 @pytest.mark.asyncio
-async def test_generation_cache_update_and_merge(
-    mock_bmrs, mock_pvlive, mock_neso, cache_manager
-):
+async def test_generation_cache_update_and_merge(mock_bmrs, mock_pvlive, mock_neso):
 
     # Mock BMRS data
     mock_bmrs.return_value = (
@@ -34,10 +36,13 @@ async def test_generation_cache_update_and_merge(
     # Mock NESO Data
     mock_neso.return_value = {"2026-07-08T12:30:00Z": 400}
 
-    await cache_manager.update_generation()
+    generation_store = CacheStore(
+        "generation", GenerationAggregator.fetch_aggregated_data
+    )
+    await generation_store.update()
 
     # Verify the cache has been updated and merged
-    data = await cache_manager.get_generation_summary()
+    data = await generation_store.get()
     assert isinstance(data, list)
     assert len(data) == 1
 

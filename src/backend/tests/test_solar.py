@@ -13,7 +13,7 @@ async def test_solar_data_fetching(mock_get, empty_client):
     mock_response.json.return_value = {"data": [["2024-01-01T12:00:00Z", 10, 150.5]]}
     mock_get.return_value = mock_response
 
-    await app.state.cache_manager.update_solar()
+    await app.state.solar_uk_store.update()
 
     response = empty_client.get("/api/solar/solar")
     data = response.json()
@@ -36,7 +36,7 @@ async def test_solar_cache_logic(mock_get, empty_client):
     mock_get.return_value = mock_response
 
     # Force a cache update
-    await app.state.cache_manager.update_solar()
+    await app.state.solar_uk_store.update()
     assert mock_get.call_count == 14
 
     mock_get.reset_mock()
