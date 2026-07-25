@@ -2,8 +2,6 @@ from datetime import datetime
 from unittest.mock import patch
 
 import pytest
-
-
 from services.cache_store import CacheStore
 from services.generation_aggregator import GenerationAggregator
 

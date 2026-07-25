@@ -1,5 +1,11 @@
 import { BACKEND_URL } from './api.js'
 
+export const MAP_VIEWS = {
+  DEFAULT: { center: [-0.5, 50.0], zoom: 4.0 },
+  UK: { center: [-2.5, 54.0], zoom: 4.8 },
+  FRANCE: { center: [2.2, 46.2], zoom: 4.5 },
+}
+
 export const MAP_CONFIG = {
   style: 'mapbox://styles/mapbox/dark-v11',
   center: [-2.5, 54.5], // Centre of UK

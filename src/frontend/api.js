@@ -12,7 +12,12 @@ async function fetchWithCheck(url) {
             console.error(`HTTP error! status: ${response.status}`)
             return null
         }
-        return await response.json()
+        const data = await response.json()
+        if (data && data.error) {
+            console.error(`API error: ${data.error}`)
+            return null
+        }
+        return data
     } catch (e) {
         console.error('Network error fetching from backend:', e)
         return null
@@ -25,13 +30,24 @@ export async function fetchGenerationSummary() {
 }
 
 export async function fetchSolarData() {
-    return fetchWithCheck(`${API_BASE_URL}/solar/solar`)
+    const [uk, france] = await Promise.all([
+        fetchWithCheck(`${API_BASE_URL}/solar/solar`),
+        fetchWithCheck(`${API_BASE_URL}/solar/solar/france`)
+    ])
+    return { uk, france }
 }
 
 export async function fetchRiverLevels() {
     return fetchWithCheck(`${API_BASE_URL}/environment/river_levels`)
 }
 
+// Bump this version only when the static TopoJSON boundary files change
+const STATIC_VERSION = '2024.1'
+
 export async function fetchMapRegions() {
-    return fetchWithCheck(`${BACKEND_URL}/static/gb-dno-license-areas-2024_wgs84.topojson`)
+    const [uk, france] = await Promise.all([
+        fetchWithCheck(`${BACKEND_URL}/static/gb-dno-license-areas-2024_wgs84.topojson?v=${STATIC_VERSION}`),
+        fetchWithCheck(`${BACKEND_URL}/static/france-regions.topojson?v=${STATIC_VERSION}`)
+    ])
+    return { uk, france }
 }

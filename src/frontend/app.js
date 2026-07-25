@@ -3,6 +3,7 @@ import { initMap, updateMapData } from './map.js'
 import { initEnvMap, updateEnvMapData } from './envMap.js'
 
 document.addEventListener('DOMContentLoaded', () => {
+  let activeTab = 'tab-generation'
   const navItems = document.querySelectorAll('.nav-item')
   const tabContents = document.querySelectorAll('.tab-content')
 
@@ -14,7 +15,13 @@ document.addEventListener('DOMContentLoaded', () => {
       item.classList.add('active')
 
       const targetId = item.getAttribute('data-target')
-      document.getElementById(targetId).classList.add('active')
+      const tabEl = document.getElementById(targetId)
+      if (!tabEl) {
+        console.error(`Tab element not found: ${targetId}`)
+        return
+      }
+      tabEl.classList.add('active')
+      activeTab = targetId
 
       if (targetId === 'tab-generation') {
         initCharts()
@@ -29,10 +36,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // Only init the default visible tab — maps defer until their tab is clicked
   initCharts()
 
-  // Polling every 5 minutes (300,000 ms)
+  // Polling every 5 minutes — only refresh the active tab
   setInterval(() => {
-    initCharts()
-    updateMapData()
-    updateEnvMapData()
+    if (activeTab === 'tab-generation') {
+      initCharts()
+    } else if (activeTab === 'tab-maps') {
+      updateMapData()
+    } else if (activeTab === 'tab-environment') {
+      updateEnvMapData()
+    }
   }, 300_000)
 })

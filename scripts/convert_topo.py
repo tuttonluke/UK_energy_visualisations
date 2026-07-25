@@ -1,4 +1,5 @@
 import json
+
 import topojson as tp
 
 geojson_path = "src/backend/static/gb-dno-license-areas-2024_wgs84.geojson"
