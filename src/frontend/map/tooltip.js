@@ -11,6 +11,7 @@ import { COUNTRIES } from './countryRegistry.js'
  * @param {object} opts
  * @param {string} opts.country          - Country key (e.g. 'uk')
  * @param {boolean} opts.isMicro         - Whether we are in micro (regional) mode
+ * @param {boolean} opts.isSelected      - Whether the country is currently selected
  * @param {string} opts.regionName       - Region display name
  * @param {string} opts.subName          - Sub-label (e.g. DNO name)
  * @param {string} opts.displayId        - Region identifier
@@ -22,6 +23,7 @@ import { COUNTRIES } from './countryRegistry.js'
 export function buildTooltipHtml ({
   country,
   isMicro,
+  isSelected,
   regionName,
   subName,
   displayId,
@@ -32,7 +34,11 @@ export function buildTooltipHtml ({
   const config = COUNTRIES[country]
   const sourceLabel = config?.dataSource || 'Unknown'
   const title = isMicro ? regionName : (config?.displayTitle || country.toUpperCase())
-  const subtitle = isMicro ? subName : 'National'
+  
+  let subtitle = isMicro ? subName : 'National'
+  if (isSelected && !config?.hasMicroData) {
+    subtitle = 'National: no regional data available'
+  }
 
   return `
     <div style="min-width: 250px;">

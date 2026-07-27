@@ -5,6 +5,7 @@ import { state } from './state.js'
 import { SOURCE_IDS, LAYER_IDS, updateMapStyles } from './layers.js'
 import { updateStatsPanel } from './statsPanel.js'
 import { buildTooltipHtml } from './tooltip.js'
+import { initDetailsPanel, openDetailsPanel, closeDetailsPanel } from './detailsPanel.js'
 
 const popup = new mapboxgl.Popup({
   closeButton: false,
@@ -65,7 +66,7 @@ function formatGenerationDisplay (isUnavailable, generationMw, normalizedValue) 
  */
 function getOutputLabel (country, isMicro) {
   const config = COUNTRIES[country]
-  if (!config?.hasMicroData) return 'National Output (Regional N/A):'
+  if (!config?.hasMicroData) return 'National Output:'
   return isMicro ? 'Regional Output:' : 'National Output:'
 }
 
@@ -79,6 +80,14 @@ function getOutputLabel (country, isMicro) {
  */
 export function registerMapEvents () {
   const { mapInstance } = state
+
+  // Initialize details panel close behavior
+  initDetailsPanel(() => {
+    state.selectedCountry = null
+    updateStatsPanel(state.selectedCountry, state.currentSolarData)
+    updateMapStyles()
+    mapInstance.flyTo(MAP_VIEWS.DEFAULT)
+  })
 
   // -----------------------------------------------------------------------
   // Mousemove — hover highlight + tooltip
@@ -139,6 +148,7 @@ export function registerMapEvents () {
         buildTooltipHtml({
           country,
           isMicro,
+          isSelected: state.selectedCountry === country,
           regionName: feature.properties.displayName,
           subName: feature.properties.displaySub,
           displayId: feature.properties.displayId,
@@ -179,7 +189,11 @@ export function registerMapEvents () {
 
     const config = COUNTRIES[clickedCountry]
     if (config?.mapView) {
-      mapInstance.flyTo(config.mapView)
+      mapInstance.flyTo({
+        ...config.mapView,
+        padding: { left: 380, top: 0, right: 0, bottom: 0 }
+      })
+      openDetailsPanel(clickedCountry)
     }
   })
 
@@ -194,6 +208,7 @@ export function registerMapEvents () {
       state.selectedCountry = null
       updateStatsPanel(state.selectedCountry, state.currentSolarData)
       updateMapStyles()
+      closeDetailsPanel()
     }
   })
 
@@ -207,6 +222,7 @@ export function registerMapEvents () {
       state.selectedCountry = null
       updateStatsPanel(state.selectedCountry, state.currentSolarData)
       updateMapStyles()
+      closeDetailsPanel()
       mapInstance.flyTo(MAP_VIEWS.DEFAULT)
     })
   }
@@ -215,9 +231,16 @@ export function registerMapEvents () {
   // Normalise toggle
   // -----------------------------------------------------------------------
   const toggle = document.getElementById('normalize-toggle')
+  const labelTotalMw = document.getElementById('label-total-mw')
+  const labelMwKm2 = document.getElementById('label-mw-km2')
+
   if (toggle) {
     toggle.addEventListener('click', e => {
       state.isNormalized = e.target.checked
+      if (labelTotalMw && labelMwKm2) {
+        labelTotalMw.style.opacity = state.isNormalized ? '0.5' : '1'
+        labelMwKm2.style.opacity = state.isNormalized ? '1' : '0.5'
+      }
       updateMapStyles()
     })
   }
@@ -231,11 +254,13 @@ export function registerMapEvents () {
       state.selectedCountry = null
       updateStatsPanel(state.selectedCountry, state.currentSolarData)
       updateMapStyles()
+      closeDetailsPanel()
       mapInstance.flyTo({
         center: MAP_VIEWS.DEFAULT.center,
         zoom: MAP_VIEWS.DEFAULT.zoom,
         pitch: 20,
         bearing: 0,
+        padding: { left: 0, top: 0, right: 0, bottom: 0 }
       })
     })
   }

@@ -57,54 +57,101 @@
 
         <!-- Maps Tab -->
         <div id="tab-maps" class="tab-content">
-            <!-- UI Overlay for Maps -->
-            <div id="map-overlay">
-                <!-- Dropdown -->
-                <div class="glass-panel">
-                    <select id="map-selector" class="custom-select">
-                        <option value="solar">Solar PV Generation</option>
-                        <!-- Future maps will be added here -->
-                    </select>
-                </div>
-
-                <!-- Total Stats Card (Currently tied to Solar map) -->
-                <div id="solar-stats" class="glass-panel" style="cursor: pointer;">
-                    <div id="stats-title" class="stats-title">Select a country</div>
-                    <div id="stats-value-container" class="stats-value" style="display: none;">
-                        <span id="total-gen-display" class="stats-number">--</span>
-                        <span class="stats-unit">MW</span>
-                    </div>
-                    <div class="status-indicator">
-                        <div class="status-dot pulse" id="status-dot"></div>
-                        <span id="status-text">Connecting...</span>
-                    </div>
-                </div>
-
-                <!-- Normalization Toggle -->
-                <div class="glass-panel map-controls">
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="normalize-toggle" checked>
-                        <span class="slider round"></span>
-                        <span class="toggle-label">Normalise by Area (MW/km²)</span>
-                    </label>
+            <!-- Details Panel (Left side) -->
+            <div id="country-details-panel" class="glass-panel details-panel">
+                <div class="details-header">
+                    <h2 id="details-country-title">Country Name</h2>
+                    <button id="close-details-btn" class="close-btn" title="Close panel">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
                 </div>
                 
-                <!-- Solar Map Legend -->
-                <div id="solar-legend" class="glass-panel">
-                    <div id="solar-legend-title" class="stats-title" style="margin-bottom: 8px;">Solar Output Density</div>
-                    <div id="solar-legend-scale" style="display: flex; flex-direction: column; gap: 4px;">
-                        <!-- Injected dynamically by JS -->
+                <div class="metrics-grid">
+                    <div class="metric-box">
+                        <div class="stats-title" style="text-align: left;">Total Capacity</div>
+                        <div class="metric-value"><span id="details-cap-total">--</span> <span class="stats-unit">GW</span></div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="stats-title" style="text-align: left;">Cap. Density</div>
+                        <div class="metric-value"><span id="details-cap-density">--</span> <span class="stats-unit">kW/km²</span></div>
+                    </div>
+                </div>
+
+                <div class="chart-container-small">
+                    <div class="stats-title" style="text-align: left; margin-bottom: 0.5rem;">24h Solar Output</div>
+                    <div style="position: relative; height: 200px; width: 100%;">
+                        <canvas id="country-detail-chart"></canvas>
                     </div>
                 </div>
             </div>
 
-            <!-- Reset Map Button -->
-            <button id="solar-map-reset" class="glass-panel map-reset-btn" title="Reset Map View">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-                    <path d="M3 3v5h5"></path>
-                </svg>
-            </button>
+            <!-- UI Overlay for Maps (Top Right) -->
+            <div id="map-overlay">
+                <div class="top-right-buttons" style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-bottom: 0.5rem;">
+                    <!-- Reset Map Button -->
+                    <button id="solar-map-reset" class="glass-panel icon-btn" title="Reset Map View">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                            <path d="M3 3v5h5"></path>
+                        </svg>
+                    </button>
+                    <!-- Layers Button (Placeholder) -->
+                    <button class="glass-panel icon-btn" title="Layers">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                            <polyline points="2 12 12 17 22 12"></polyline>
+                            <polyline points="2 17 12 22 22 17"></polyline>
+                        </svg>
+                    </button>
+                    <!-- Settings Button (Placeholder) -->
+                    <button class="glass-panel icon-btn" title="Settings">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Combined Stats & Normalization Panel -->
+                <div class="glass-panel" style="width: 250px;">
+                    <div id="solar-stats" style="cursor: pointer; text-align: center; margin-bottom: 1rem;">
+                        <div id="stats-title" class="stats-title">Select a country</div>
+                        <div id="stats-value-container" class="stats-value" style="display: none;">
+                            <span id="total-gen-display" class="stats-number">--</span>
+                            <span class="stats-unit">MW</span>
+                        </div>
+                        <div class="status-indicator">
+                            <div class="status-dot pulse" id="status-dot"></div>
+                            <span id="status-text">Connecting...</span>
+                        </div>
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border-color); margin: 0 -1rem 1rem -1rem;"></div>
+
+                    <!-- Normalization Toggle -->
+                    <div class="map-controls">
+                        <span id="label-total-mw" class="toggle-label" style="opacity: 0.5;">Total MW</span>
+                        <label class="toggle-switch" style="margin: 0 10px;">
+                            <input type="checkbox" id="normalize-toggle" checked>
+                            <span class="slider round"></span>
+                        </label>
+                        <span id="label-mw-km2" class="toggle-label" style="opacity: 1;">MW / km²</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Legend Overlay (Bottom Right) -->
+            <div id="legend-overlay">
+                <div id="solar-legend" class="glass-panel">
+                    <div id="solar-legend-title" class="stats-title" style="margin-bottom: 8px;">Solar Output Density</div>
+                    <div id="solar-legend-scale">
+                        <!-- Injected dynamically by JS -->
+                    </div>
+                </div>
+            </div>
 
             <!-- Map Container -->
             <div id="map"></div>

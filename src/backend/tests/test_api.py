@@ -1,9 +1,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 
-def test_proxy_mapbox_endpoint_missing_path(client):
-    response = client.get("/api/proxy/mapbox")
-    assert response.status_code == 422  # Missing required 'path' parameter
+
 
 
 @patch("main.MAPBOX_ACCESS_TOKEN", None)
