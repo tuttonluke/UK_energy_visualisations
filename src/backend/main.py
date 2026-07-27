@@ -175,10 +175,10 @@ app.include_router(river_levels.router, prefix="/api/environment", tags=["enviro
 
 
 # API endpoints
-@app.get("/api/proxy/mapbox")
+@app.api_route("/api/proxy/mapbox", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"])
 @limiter.limit("2000/minute")
 async def proxy_mapbox(
-    request: Request, path: str, client: httpx.AsyncClient = Depends(get_client)
+    request: Request, path: str = "/", client: httpx.AsyncClient = Depends(get_client)
 ):
     """
     Proxies requests to the Mapbox API to keep the access token hidden from the frontend.
@@ -202,21 +202,23 @@ async def proxy_mapbox(
     params["access_token"] = MAPBOX_ACCESS_TOKEN
     new_url = base_url.copy_with(path=path, params=params)
 
-    # Forward browser cache headers so Mapbox can return 304 Not Modified
+    # Forward browser cache headers so Mapbox can return 304 Not Modified,
+    # and content-type so POST bodies (telemetry/sessions) are relayed correctly.
     forward_headers = {
         k: v
         for k, v in request.headers.items()
-        if k.lower() in ("if-none-match", "if-modified-since", "accept")
+        if k.lower() in ("if-none-match", "if-modified-since", "accept", "content-type")
     }
 
     try:
-        req = client.build_request("GET", new_url, headers=forward_headers)
+        req = client.build_request(request.method, new_url, headers=forward_headers)
         r = await client.send(req, stream=True)
     except httpx.HTTPError as e:
         logger.error(f"Mapbox proxy upstream error: {e}")
         raise HTTPException(status_code=502, detail="Failed to reach Mapbox") from e
 
-    # Forward response headers, keeping content-encoding for raw passthrough
+    # Forward response headers — keep content-encoding so GZipMiddleware
+    # knows the response is already compressed and skips double-encoding.
     headers = {}
     for k, v in r.headers.items():
         if k.lower() not in (
