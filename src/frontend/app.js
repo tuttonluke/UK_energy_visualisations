@@ -1,5 +1,5 @@
 import { initCharts } from './charts.js'
-import { initMap, updateMapData } from './map.js'
+import { initMap, updateMapData } from './map/index.js'
 import { initEnvMap, updateEnvMapData } from './envMap.js'
 
 document.addEventListener('DOMContentLoaded', () => {
