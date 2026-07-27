@@ -109,6 +109,10 @@ async function loadMapData () {
 /**
  * Initialise the Mapbox map instance and trigger the first data load.
  * Safe to call multiple times — subsequent calls only resize.
+ *
+ * Uses an automatic retry mechanism: if the map style fails to load
+ * within LOAD_TIMEOUT_MS (common with proxy setups due to transient
+ * network / timing issues), the map is destroyed and re-created.
  */
 export async function initMap () {
   if (state.mapInstance) {
@@ -120,7 +124,21 @@ export async function initMap () {
   // which injects the real token. Do not replace this with a real key.
   mapboxgl.accessToken = 'pk.dummy'
 
-  state.mapInstance = new mapboxgl.Map({
+  createMapWithRetry()
+}
+
+const MAX_RETRIES = 3
+const LOAD_TIMEOUT_MS = 10_000
+
+function createMapWithRetry (attempt = 1) {
+  const statusText = document.getElementById('status-text')
+
+  if (attempt > 1 && statusText) {
+    statusText.textContent = `Retrying map load (${attempt}/${MAX_RETRIES + 1})…`
+    setStatusDot('pulse')
+  }
+
+  const map = new mapboxgl.Map({
     container: 'map',
     ...MAP_CONFIG,
     center: MAP_VIEWS.DEFAULT.center,
@@ -128,15 +146,29 @@ export async function initMap () {
     pitch: 20,
   })
 
-  // Handle map style/tile load errors
-  state.mapInstance.on('error', e => {
+  // Timeout — if the style hasn't loaded in time, tear down and retry
+  const loadTimer = setTimeout(() => {
+    console.warn(`Map style load timed out (attempt ${attempt}/${MAX_RETRIES + 1})`)
+    map.remove()
+
+    if (attempt <= MAX_RETRIES) {
+      createMapWithRetry(attempt + 1)
+    } else {
+      if (statusText) statusText.textContent = 'Map load failed'
+      setStatusDot('error')
+    }
+  }, LOAD_TIMEOUT_MS)
+
+  // Log errors but don't surface them to the UI — let the timeout
+  // handle genuine failures so transient tile/telemetry errors
+  // don't prematurely mark the map as broken.
+  map.on('error', e => {
     console.error('Mapbox error:', e.error?.message || e)
-    const statusText = document.getElementById('status-text')
-    if (statusText) statusText.textContent = 'Map load failed'
-    setStatusDot('error')
   })
 
-  state.mapInstance.on('load', () => {
+  map.on('load', () => {
+    clearTimeout(loadTimer)
+    state.mapInstance = map
     loadMapData()
   })
 }

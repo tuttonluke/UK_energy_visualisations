@@ -183,6 +183,10 @@ function addEnvMapLayers (stationsGeoJSON) {
   })
 }
 
+const ENV_MAX_RETRIES = 3
+const ENV_LOAD_TIMEOUT_MS = 10_000
+let resetBtnRegistered = false
+
 export async function initEnvMap () {
   if (envMapInstance) {
     setTimeout(() => envMapInstance.resize(), 100)
@@ -191,34 +195,60 @@ export async function initEnvMap () {
 
   mapboxgl.accessToken = 'pk.dummy'
 
-  envMapInstance = new mapboxgl.Map({
+  createEnvMapWithRetry()
+}
+
+function createEnvMapWithRetry (attempt = 1) {
+  if (attempt > 1) {
+    document.getElementById('env-status-text').innerText =
+      `Retrying map load (${attempt}/${ENV_MAX_RETRIES + 1})…`
+  }
+
+  const map = new mapboxgl.Map({
     container: 'env-map',
     ...MAP_CONFIG,
     pitch: 0
   })
 
-  // Handle map style/tile load errors
-  envMapInstance.on('error', (e) => {
+  // Timeout — if the style hasn't loaded in time, tear down and retry
+  const loadTimer = setTimeout(() => {
+    console.warn(`Env map style load timed out (attempt ${attempt}/${ENV_MAX_RETRIES + 1})`)
+    map.remove()
+
+    if (attempt <= ENV_MAX_RETRIES) {
+      createEnvMapWithRetry(attempt + 1)
+    } else {
+      document.getElementById('env-status-text').innerText = 'Map load failed'
+      document.getElementById('env-status-dot').classList.replace('pulse', 'error')
+    }
+  }, ENV_LOAD_TIMEOUT_MS)
+
+  // Log errors but don't surface them — let the timeout handle failures
+  map.on('error', (e) => {
     console.error('Mapbox error:', e.error?.message || e)
-    document.getElementById('env-status-text').innerText = 'Map load failed'
-    document.getElementById('env-status-dot').classList.replace('pulse', 'error')
   })
 
-  envMapInstance.on('load', () => {
+  map.on('load', () => {
+    clearTimeout(loadTimer)
+    envMapInstance = map
     loadEnvMapData()
   })
 
-  // Reset button listener
-  const resetBtn = document.getElementById('env-map-reset')
-  if (resetBtn) {
-    resetBtn.addEventListener('click', () => {
-      envMapInstance.flyTo({
-        center: MAP_CONFIG.center,
-        zoom: MAP_CONFIG.zoom,
-        pitch: 0,
-        bearing: 0
+  // Register reset button listener only once
+  if (!resetBtnRegistered) {
+    resetBtnRegistered = true
+    const resetBtn = document.getElementById('env-map-reset')
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        if (!envMapInstance) return
+        envMapInstance.flyTo({
+          center: MAP_CONFIG.center,
+          zoom: MAP_CONFIG.zoom,
+          pitch: 0,
+          bearing: 0
+        })
       })
-    })
+    }
   }
 }
 
