@@ -17,8 +17,10 @@ from services.environment_agency import fetch_ea_readings, fetch_ea_stations
 from services.generation_aggregator import GenerationAggregator
 from services.http_client import get_client
 from services.orchestrator import BackgroundOrchestrator
+from services.solar_data.belgium_elia import fetch_belgium_live
+from services.solar_data.denmark_energinet import fetch_denmark_live
+from services.solar_data.energy_charts import fetch_energy_charts_live
 from services.solar_data.france_rte import fetch_rte_live
-from services.solar_data.germany_energy_charts import fetch_germany_live
 from services.solar_data.uk_pvlive import fetch_pvlive_live
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -55,7 +57,10 @@ logger = logging.getLogger(__name__)
 # Solar
 solar_uk_store = CacheStore("solar_uk", fetch_pvlive_live)
 solar_fr_store = CacheStore("solar_fr", fetch_rte_live)
-solar_de_store = CacheStore("solar_de", fetch_germany_live)
+solar_de_store = None  # Deprecated, use energy_charts_store
+energy_charts_store = CacheStore("energy_charts", fetch_energy_charts_live)
+solar_dk_store = CacheStore("solar_dk", fetch_denmark_live)
+solar_be_store = CacheStore("solar_be", fetch_belgium_live)
 
 # Generation plots
 generation_store = CacheStore("generation", GenerationAggregator.fetch_aggregated_data)
@@ -70,7 +75,9 @@ orchestrator = BackgroundOrchestrator()
 # Solar
 orchestrator.register("solar_uk", solar_uk_store.update, 300)
 orchestrator.register("solar_fr", solar_fr_store.update, 300)
-orchestrator.register("solar_de", solar_de_store.update, 300)
+orchestrator.register("energy_charts", energy_charts_store.update, 300)
+orchestrator.register("solar_dk", solar_dk_store.update, 300)
+orchestrator.register("solar_be", solar_be_store.update, 300)
 
 # Generation plots
 orchestrator.register("generation", generation_store.update, 300)
@@ -97,7 +104,9 @@ async def lifespan(app: FastAPI):
 
     app.state.solar_uk_store = solar_uk_store
     app.state.solar_fr_store = solar_fr_store
-    app.state.solar_de_store = solar_de_store
+    app.state.energy_charts_store = energy_charts_store
+    app.state.solar_dk_store = solar_dk_store
+    app.state.solar_be_store = solar_be_store
     app.state.generation_store = generation_store
     app.state.river_stations_store = river_stations_store
     app.state.river_readings_store = river_readings_store
@@ -140,13 +149,20 @@ async def add_cache_control_header(request: Request, call_next):
     This ensures browsers cache static assets (like large GeoJSON files) for 24 hours,
     reducing unnecessary bandwidth and improving load times.
     """
-    response = await call_next(request)
-    if (
-        request.url.path.startswith("/static/")
-        and "Cache-Control" not in response.headers
-    ):
-        response.headers["Cache-Control"] = "public, max-age=86400"
-    return response
+    try:
+        response = await call_next(request)
+        if (
+            request.url.path.startswith("/static/")
+            and "Cache-Control" not in response.headers
+        ):
+            response.headers["Cache-Control"] = "public, max-age=86400"
+        return response
+    except RuntimeError as exc:
+        if str(exc) == "No response returned.":
+            from fastapi import Response
+
+            return Response(status_code=499)  # 499 Client Closed Request
+        raise
 
 
 # Serve static files (like GeoJSON) with compression support

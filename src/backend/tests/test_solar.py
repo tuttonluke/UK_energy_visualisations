@@ -63,17 +63,50 @@ def test_solar_france_endpoint(client):
     assert data["75"] == 50
 
 
-def test_solar_germany_endpoint_empty_cache(empty_client):
-    response = empty_client.get("/api/solar/solar/germany")
+def test_energy_charts_endpoint_empty_cache(empty_client):
+    response = empty_client.get("/api/solar/solar/energy_charts")
     assert response.status_code == 503
     assert response.json() == {
-        "detail": "German solar data is currently unavailable. Please try again later."
+        "detail": "Energy-Charts solar data is currently unavailable. Please try again later."
     }
 
 
-def test_solar_germany_endpoint(client):
-    response = client.get("/api/solar/solar/germany")
+def test_energy_charts_endpoint(client):
+    response = client.get("/api/solar/solar/energy_charts")
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, dict)
-    assert data["totalGen"] == 120
+    assert data["de"]["totalGen"] == 120
+    assert data["nl"]["totalGen"] == 80
+
+
+def test_solar_denmark_endpoint_empty_cache(empty_client):
+    response = empty_client.get("/api/solar/solar/denmark")
+    assert response.status_code == 503
+    assert response.json() == {
+        "detail": "Danish solar data is currently unavailable. Please try again later."
+    }
+
+
+def test_solar_denmark_endpoint(client):
+    response = client.get("/api/solar/solar/denmark")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, dict)
+    assert data["totalGen"] == 30
+
+
+def test_solar_belgium_endpoint_empty_cache(empty_client):
+    response = empty_client.get("/api/solar/solar/belgium")
+    assert response.status_code == 503
+    assert response.json() == {
+        "detail": "Belgian solar data is currently unavailable. Please try again later."
+    }
+
+
+def test_solar_belgium_endpoint(client):
+    response = client.get("/api/solar/solar/belgium")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, dict)
+    assert data["totalGen"] == 40

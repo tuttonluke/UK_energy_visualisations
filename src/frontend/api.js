@@ -30,12 +30,32 @@ export async function fetchGenerationSummary() {
 }
 
 export async function fetchSolarData() {
-    const [uk, france, germany] = await Promise.all([
+    const [uk, france, energy_charts, denmark, belgium] = await Promise.all([
         fetchWithCheck(`${API_BASE_URL}/solar/solar`),
         fetchWithCheck(`${API_BASE_URL}/solar/solar/france`),
-        fetchWithCheck(`${API_BASE_URL}/solar/solar/germany`)
+        fetchWithCheck(`${API_BASE_URL}/solar/solar/energy_charts`),
+        fetchWithCheck(`${API_BASE_URL}/solar/solar/denmark`),
+        fetchWithCheck(`${API_BASE_URL}/solar/solar/belgium`)
     ])
-    return { uk, france, germany }
+    
+    // Flatten energy_charts into the returned object, mapping short codes to full names
+    const mappedEnergyCharts = energy_charts ? {
+        germany: energy_charts.de,
+        netherlands: energy_charts.nl,
+        austria: energy_charts.at,
+        switzerland: energy_charts.ch,
+        poland: energy_charts.pl,
+        czechia: energy_charts.cz,
+        spain: energy_charts.es
+    } : {}
+
+    return { 
+        uk, 
+        france, 
+        denmark,
+        belgium,
+        ...mappedEnergyCharts
+    }
 }
 
 export async function fetchRiverLevels() {
@@ -43,13 +63,21 @@ export async function fetchRiverLevels() {
 }
 
 // Bump this version only when the static TopoJSON boundary files change
-const STATIC_VERSION = '2024.1'
+const STATIC_VERSION = '2024.2'
 
 export async function fetchMapRegions() {
-    const [uk, france, germany] = await Promise.all([
+    const [uk, france, spain, netherlands, austria, switzerland, poland, czechia, germany, denmark, belgium] = await Promise.all([
         fetchWithCheck(`${BACKEND_URL}/static/gb-dno-license-areas-2024_wgs84.topojson?v=${STATIC_VERSION}`),
         fetchWithCheck(`${BACKEND_URL}/static/france-regions.topojson?v=${STATIC_VERSION}`),
-        fetchWithCheck(`${BACKEND_URL}/static/germany.topojson?v=${STATIC_VERSION}`)
+        fetchWithCheck(`${BACKEND_URL}/static/spain-regions.topojson?v=${STATIC_VERSION}`),
+        fetchWithCheck(`${BACKEND_URL}/static/netherlands.topojson?v=${STATIC_VERSION}`),
+        fetchWithCheck(`${BACKEND_URL}/static/austria.topojson?v=${STATIC_VERSION}`),
+        fetchWithCheck(`${BACKEND_URL}/static/switzerland.topojson?v=${STATIC_VERSION}`),
+        fetchWithCheck(`${BACKEND_URL}/static/poland.topojson?v=${STATIC_VERSION}`),
+        fetchWithCheck(`${BACKEND_URL}/static/czechia.topojson?v=${STATIC_VERSION}`),
+        fetchWithCheck(`${BACKEND_URL}/static/germany.topojson?v=${STATIC_VERSION}`),
+        fetchWithCheck(`${BACKEND_URL}/static/denmark-regions.topojson?v=${STATIC_VERSION}`),
+        fetchWithCheck(`${BACKEND_URL}/static/belgium-regions.topojson?v=${STATIC_VERSION}`)
     ])
-    return { uk, france, germany }
+    return { uk, france, spain, netherlands, austria, switzerland, poland, czechia, germany, denmark, belgium }
 }
