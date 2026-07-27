@@ -46,7 +46,8 @@ export async function fetchSolarData() {
         switzerland: energy_charts.ch,
         poland: energy_charts.pl,
         czechia: energy_charts.cz,
-        spain: energy_charts.es
+        spain: energy_charts.es,
+        portugal: energy_charts.pt
     } : {}
 
     return { 
@@ -62,11 +63,11 @@ export async function fetchRiverLevels() {
     return fetchWithCheck(`${API_BASE_URL}/environment/river_levels`)
 }
 
-// Bump this version only when the static TopoJSON boundary files change
-const STATIC_VERSION = '2024.2'
+// Cache buster for static TopoJSON files
+const STATIC_VERSION = '2024.4'
 
 export async function fetchMapRegions() {
-    const [uk, france, spain, netherlands, austria, switzerland, poland, czechia, germany, denmark, belgium] = await Promise.all([
+    const [uk, france, spain, netherlands, austria, switzerland, poland, czechia, germany, denmark, belgium, portugal] = await Promise.all([
         fetchWithCheck(`${BACKEND_URL}/static/gb-dno-license-areas-2024_wgs84.topojson?v=${STATIC_VERSION}`),
         fetchWithCheck(`${BACKEND_URL}/static/france-regions.topojson?v=${STATIC_VERSION}`),
         fetchWithCheck(`${BACKEND_URL}/static/spain-regions.topojson?v=${STATIC_VERSION}`),
@@ -77,7 +78,8 @@ export async function fetchMapRegions() {
         fetchWithCheck(`${BACKEND_URL}/static/czechia.topojson?v=${STATIC_VERSION}`),
         fetchWithCheck(`${BACKEND_URL}/static/germany.topojson?v=${STATIC_VERSION}`),
         fetchWithCheck(`${BACKEND_URL}/static/denmark-regions.topojson?v=${STATIC_VERSION}`),
-        fetchWithCheck(`${BACKEND_URL}/static/belgium-regions.topojson?v=${STATIC_VERSION}`)
+        fetchWithCheck(`${BACKEND_URL}/static/belgium-regions.topojson?v=${STATIC_VERSION}`),
+        fetchWithCheck(`${BACKEND_URL}/static/portugal.topojson?v=${STATIC_VERSION}`)
     ])
-    return { uk, france, spain, netherlands, austria, switzerland, poland, czechia, germany, denmark, belgium }
+    return { uk, france, spain, netherlands, austria, switzerland, poland, czechia, germany, denmark, belgium, portugal }
 }

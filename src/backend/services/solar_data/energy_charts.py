@@ -6,8 +6,8 @@ from services.http_client import get_client
 logger = logging.getLogger(__name__)
 
 # List of countries to fetch from Fraunhofer Energy-Charts
-# 'ch': Switzerland, 'pl': Poland, 'cz': Czechia, 'es': Spain
-COUNTRIES = ["de", "nl", "at", "ch", "pl", "cz", "es"]
+# 'ch': Switzerland, 'pl': Poland, 'cz': Czechia, 'es': Spain, 'pt': Portugal
+COUNTRIES = ["de", "nl", "at", "ch", "pl", "cz", "es", "pt"]
 
 
 async def fetch_energy_charts_live():
