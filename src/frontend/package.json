@@ -9,6 +9,7 @@
     "build": "vite build"
   },
   "dependencies": {
+    "@turf/area": "^7.3.5",
     "chart.js": "^4.5.1",
     "chartjs-adapter-date-fns": "^3.0.0",
     "date-fns": "^4.4.0",
