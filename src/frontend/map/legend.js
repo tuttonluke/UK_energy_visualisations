@@ -1,55 +1,35 @@
-import { SOLAR_COLORS } from './colorScales.js'
+import { 
+  SOLAR_COLORS, 
+  NORMALIZED_STOPS, 
+  MACRO_ABSOLUTE_STOPS, 
+  MICRO_ABSOLUTE_STOPS 
+} from './colorScales.js'
 
-const { c0, c2, c4, c6, c8 } = SOLAR_COLORS
+const { c0, c1, c2, c3, c4, c5, c6, c7, c8 } = SOLAR_COLORS
+const GRADIENT_CSS = `linear-gradient(to right, ${c0}, ${c1}, ${c2}, ${c3}, ${c4}, ${c5}, ${c6}, ${c7}, ${c8})`
 
 /**
- * Pre-defined legend configurations.
- * Each has a title and an ordered array of [color, label] items.
+ * Render the continuous scale legend as HTML.
  */
-const LEGEND_CONFIGS = {
-  normalized: {
-    title: 'Solar Density (MW/km²)',
-    items: [
-      [c8, '> 0.50'],
-      [c6, '~ 0.20'],
-      [c4, '~ 0.06'],
-      [c2, '~ 0.01'],
-      [c0, '0 / Offline'],
-    ],
-  },
-  absoluteMicro: {
-    title: 'Regional Output (MW)',
-    items: [
-      [c8, '> 5,000'],
-      [c6, '~ 2,000'],
-      [c4, '~ 500'],
-      [c2, '~ 100'],
-      [c0, '0 / Offline'],
-    ],
-  },
-  absoluteMacro: {
-    title: 'National Output (MW)',
-    items: [
-      [c8, '> 60,000'],
-      [c6, '~ 20,000'],
-      [c4, '~ 5,000'],
-      [c2, '~ 1,000'],
-      [c0, '0 / Offline'],
-    ],
-  },
+function renderContinuousLegend (min, mid, max) {
+  return `
+    <div class="continuous-scale-bar" style="background: ${GRADIENT_CSS};"></div>
+    <div class="legend-labels">
+        <span>${min}</span>
+        <span>${mid}</span>
+        <span>${max}+</span>
+    </div>
+  `
 }
 
 /**
- * Render legend items as HTML.  Uses only hardcoded palette
- * constants so there is no XSS risk from dynamic values.
+ * Format large numbers for legend labels.
  */
-function renderLegendItems (items) {
-  return items
-    .map(
-      ([color, label]) =>
-        `<div class="legend-item"><div class="legend-color" style="background-color: ${color};"></div><span>${label}</span></div>`
-    )
-    .join('\n')
+function formatLabel (num) {
+  if (num >= 1000) {
+    return (num / 1000).toString() + 'k'
+  }
+  return num.toString()
 }
 
 /**
@@ -59,17 +39,28 @@ function renderLegendItems (items) {
  * @param {boolean} isMicroMode  - Whether a country with micro data is selected
  */
 export function updateLegend (isNormalized, isMicroMode) {
-  let config
+  let title = ''
+  let stops = []
+
   if (isNormalized) {
-    config = LEGEND_CONFIGS.normalized
+    title = 'Solar Density (MW/km²)'
+    stops = NORMALIZED_STOPS
   } else if (isMicroMode) {
-    config = LEGEND_CONFIGS.absoluteMicro
+    title = 'Regional Output (MW)'
+    stops = MICRO_ABSOLUTE_STOPS
   } else {
-    config = LEGEND_CONFIGS.absoluteMacro
+    title = 'National Output (MW)'
+    stops = MACRO_ABSOLUTE_STOPS
   }
 
   const titleEl = document.getElementById('solar-legend-title')
   const scaleEl = document.getElementById('solar-legend-scale')
-  if (titleEl) titleEl.textContent = config.title
-  if (scaleEl) scaleEl.innerHTML = renderLegendItems(config.items)
+  
+  if (titleEl) titleEl.textContent = title
+  if (scaleEl) {
+    const min = formatLabel(stops[0])
+    const mid = formatLabel(stops[4])
+    const max = formatLabel(stops[8])
+    scaleEl.innerHTML = renderContinuousLegend(min, mid, max)
+  }
 }
