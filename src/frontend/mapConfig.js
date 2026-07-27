@@ -13,6 +13,7 @@ export const MAP_VIEWS = {
   CZECHIA: { center: [15.47, 49.81], zoom: 6.0 },
   DENMARK: { center: [9.50, 56.26], zoom: 6.0 },
   BELGIUM: { center: [4.46, 50.50], zoom: 6.5 },
+  PORTUGAL: { center: [-8.2, 39.4], zoom: 6.0 },
 }
 
 export const MAP_CONFIG = {

@@ -194,6 +194,23 @@ export const COUNTRIES = {
     hasMicroData: true,
     mapView: MAP_VIEWS.BELGIUM,
   },
+
+  portugal: {
+    key: 'portugal',
+    idPrefix: 'pt',
+    displayTitle: 'PORTUGAL',
+    statsLabel: 'Total Portugal Output',
+    featureIdProp: 'name',
+    featureIdFallbackProp: null,
+    displayNameProp: 'name',
+    displaySubProp: null,
+    displaySubFallback: 'Portugal',
+    displayIdProp: 'id',
+    displayIdFallback: 'PT',
+    dataSource: 'Fraunhofer ISE (Energy-Charts)',
+    hasMicroData: false,
+    mapView: MAP_VIEWS.PORTUGAL,
+  },
 }
 
 /** Ordered array of country keys (stable iteration order). */
