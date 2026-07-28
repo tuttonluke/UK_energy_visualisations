@@ -17,20 +17,71 @@ export const MAP_VIEWS = {
 }
 
 export const MAP_CONFIG = {
-  style: 'mapbox://styles/mapbox/dark-v11',
+  style: {
+    version: 8,
+    sources: {
+      "protomaps": {
+        type: "vector",
+        url: "pmtiles:///map_data.pmtiles"
+      }
+    },
+    glyphs: "https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf",
+    layers: [
+      {
+        id: "background",
+        type: "background",
+        paint: {
+          "background-color": "#0f172a" // Match --bg-main
+        }
+      },
+      {
+        id: "earth",
+        type: "fill",
+        source: "protomaps",
+        "source-layer": "earth",
+        paint: {
+          "fill-color": "#1e293b" // Match --bg-sidebar / slate-800
+        }
+      },
+      {
+        id: "water",
+        type: "fill",
+        source: "protomaps",
+        "source-layer": "water",
+        paint: {
+          "fill-color": "#0f172a" // Same as background
+        }
+      },
+      {
+        id: "boundaries",
+        type: "line",
+        source: "protomaps",
+        "source-layer": "boundaries",
+        paint: {
+          "line-color": "#334155", // Match --border-color
+          "line-width": 1
+        }
+      },
+      {
+        id: "places",
+        type: "symbol",
+        source: "protomaps",
+        "source-layer": "places",
+        layout: {
+          "text-field": "{name}",
+          "text-size": 12,
+          "text-font": ["Noto Sans Regular"],
+          "text-transform": "uppercase",
+          "text-letter-spacing": 0.1
+        },
+        paint: {
+          "text-color": "#94a3b8", // Match --text-muted
+          "text-halo-color": "#0f172a", // Outline text so it's readable
+          "text-halo-width": 1
+        }
+      }
+    ]
+  },
   center: [-2.5, 54.5], // Centre of UK
   zoom: 5.5,
-  transformRequest: (url, resourceType) => {
-    if (url.startsWith('https://api.mapbox.com/')) {
-      const urlObj = new URL(url);
-      const proxyUrl = new URL(`${BACKEND_URL}/api/proxy/mapbox`);
-      proxyUrl.searchParams.set('path', urlObj.pathname);
-      urlObj.searchParams.forEach((value, key) => {
-        proxyUrl.searchParams.append(key, value);
-      });
-      return {
-        url: proxyUrl.toString()
-      }
-    }
-  }
 }

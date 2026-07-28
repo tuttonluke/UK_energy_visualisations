@@ -372,11 +372,11 @@ body {
     color: var(--text-muted);
 }
 
-/* Mapbox Popup Overrides */
-.mapboxgl-popup {
+/* MapLibre Popup Overrides */
+.maplibregl-popup {
     max-width: none !important;
 }
-.mapboxgl-popup-content {
+.maplibregl-popup-content {
     background-color: var(--bg-card) !important;
     color: var(--text-main) !important;
     border-radius: 0.5rem !important;
@@ -384,7 +384,7 @@ body {
     padding: 12px !important;
     border: 1px solid var(--border-color);
 }
-.mapboxgl-popup-tip {
+.maplibregl-popup-tip {
     border-top-color: var(--bg-card) !important;
     border-bottom-color: var(--bg-card) !important;
 }

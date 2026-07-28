@@ -1,4 +1,5 @@
 import { initCharts } from './charts.js'
+import 'maplibre-gl/dist/maplibre-gl.css'
 import { initMap, updateMapData } from './map/index.js'
 import { initEnvMap, updateEnvMapData } from './envMap.js'
 

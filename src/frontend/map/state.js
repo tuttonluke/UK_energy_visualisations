@@ -6,7 +6,7 @@
  * state transitions explicit and easy to trace.
  */
 export const state = {
-  /** @type {mapboxgl.Map | null} */
+  /** @type {maplibregl.Map | null} */
   mapInstance: null,
 
   /** @type {object | null} Solar generation data keyed by country */

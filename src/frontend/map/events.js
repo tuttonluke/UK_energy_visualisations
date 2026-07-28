@@ -1,4 +1,4 @@
-import mapboxgl from 'mapbox-gl'
+import * as maplibregl from 'maplibre-gl'
 import { MAP_VIEWS } from '../mapConfig.js'
 import { COUNTRIES } from './countryRegistry.js'
 import { state } from './state.js'
@@ -7,7 +7,7 @@ import { updateStatsPanel } from './statsPanel.js'
 import { buildTooltipHtml } from './tooltip.js'
 import { initDetailsPanel, openDetailsPanel, closeDetailsPanel } from './detailsPanel.js'
 
-const popup = new mapboxgl.Popup({
+const popup = new maplibregl.Popup({
   closeButton: false,
   closeOnClick: false,
   className: 'custom-popup',
