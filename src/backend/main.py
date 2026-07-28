@@ -11,7 +11,6 @@ from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from rate_limiter import limiter
 from routers import generation, river_levels, solar
-from services import quota_service
 from services.cache_store import CacheStore
 from services.environment_agency import fetch_ea_readings, fetch_ea_stations
 from services.generation_aggregator import GenerationAggregator
@@ -27,28 +26,12 @@ from slowapi.errors import RateLimitExceeded
 
 load_dotenv()
 
-MAPBOX_ACCESS_TOKEN = os.getenv("MAPBOX_ACCESS_TOKEN")
-
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 
 logging.getLogger("httpx").setLevel(logging.WARNING)
-
-
-class EndpointFilter(logging.Filter):
-    """
-    Custom logging filter to suppress excessive Uvicorn access logs.
-    Specifically targets and hides logs from the mapbox proxy endpoint,
-    which can generate hundreds of entries per minute during normal map usage.
-    """
-
-    def filter(self, record: logging.LogRecord) -> bool:
-        return "/api/proxy/mapbox" not in record.getMessage()
-
-
-logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
 
 logger = logging.getLogger(__name__)
 
@@ -174,75 +157,6 @@ app.include_router(generation.router, prefix="/api/generation", tags=["generatio
 app.include_router(river_levels.router, prefix="/api/environment", tags=["environment"])
 
 
-# API endpoints
-@app.api_route("/api/proxy/mapbox", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"])
-@limiter.limit("2000/minute")
-async def proxy_mapbox(
-    request: Request, path: str = "/", client: httpx.AsyncClient = Depends(get_client)
-):
-    """
-    Proxies requests to the Mapbox API to keep the access token hidden from the frontend.
-
-    Features:
-    - Prevents Server-Side Request Forgery (SSRF) by only accepting a 'path' parameter,
-      forcing the base URL to always be https://api.mapbox.com.
-    - Tracks API usage against a monthly quota to prevent billing surprises.
-    - Uses HTTP streaming to efficiently pipe Mapbox tiles directly back to the client
-      without loading them entirely into server memory first.
-    """
-    if not await quota_service.check_and_increment_quota():
-        raise HTTPException(status_code=429, detail="Mapbox monthly quota exceeded")
-
-    if not MAPBOX_ACCESS_TOKEN:
-        raise HTTPException(status_code=500, detail="Mapbox token not configured")
-
-    base_url = httpx.URL("https://api.mapbox.com")
-    params = dict(request.query_params)
-    params.pop("path", None)
-    params["access_token"] = MAPBOX_ACCESS_TOKEN
-    new_url = base_url.copy_with(path=path, params=params)
-
-    # Forward browser cache headers so Mapbox can return 304 Not Modified,
-    # and content-type so POST bodies (telemetry/sessions) are relayed correctly.
-    forward_headers = {
-        k: v
-        for k, v in request.headers.items()
-        if k.lower() in ("if-none-match", "if-modified-since", "accept", "content-type")
-    }
-
-    try:
-        req = client.build_request(request.method, new_url, headers=forward_headers)
-        r = await client.send(req, stream=True)
-    except httpx.HTTPError as e:
-        logger.error(f"Mapbox proxy upstream error: {e}")
-        raise HTTPException(status_code=502, detail="Failed to reach Mapbox") from e
-
-    # Forward response headers — keep content-encoding so GZipMiddleware
-    # knows the response is already compressed and skips double-encoding.
-    headers = {}
-    for k, v in r.headers.items():
-        if k.lower() not in (
-            "date",
-            "server",
-            "transfer-encoding",
-            "connection",
-            "content-length",
-        ):
-            headers[k] = v
-
-    async def stream_and_close():
-        try:
-            async for chunk in r.aiter_raw():
-                yield chunk
-        finally:
-            await r.aclose()
-
-    return StreamingResponse(
-        stream_and_close(),
-        status_code=r.status_code,
-        headers=headers,
-        media_type=r.headers.get("content-type"),
-    )
 
 
 if __name__ == "__main__":

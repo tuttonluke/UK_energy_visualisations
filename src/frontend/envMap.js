@@ -1,7 +1,7 @@
 import { fetchRiverLevels, BACKEND_URL } from './api.js'
 import { MAP_CONFIG } from './mapConfig.js'
 import { escapeHtml } from './utils.js'
-import mapboxgl from 'mapbox-gl'
+import * as maplibregl from 'maplibre-gl'
 
 let envMapInstance = null
 
@@ -115,7 +115,7 @@ function addEnvMapLayers (stationsGeoJSON) {
     }
   })
 
-  const popup = new mapboxgl.Popup({
+  const popup = new maplibregl.Popup({
     closeButton: false,
     closeOnClick: false,
     className: 'custom-popup env-popup'
@@ -193,8 +193,6 @@ export async function initEnvMap () {
     return
   }
 
-  mapboxgl.accessToken = 'pk.dummy'
-
   createEnvMapWithRetry()
 }
 
@@ -204,7 +202,7 @@ function createEnvMapWithRetry (attempt = 1) {
       `Retrying map load (${attempt}/${ENV_MAX_RETRIES + 1})…`
   }
 
-  const map = new mapboxgl.Map({
+  const map = new maplibregl.Map({
     container: 'env-map',
     ...MAP_CONFIG,
     pitch: 0
@@ -225,7 +223,7 @@ function createEnvMapWithRetry (attempt = 1) {
 
   // Log errors but don't surface them — let the timeout handle failures
   map.on('error', (e) => {
-    console.error('Mapbox error:', e.error?.message || e)
+    console.error('MapLibre error:', e.error?.message || e)
   })
 
   map.on('load', () => {

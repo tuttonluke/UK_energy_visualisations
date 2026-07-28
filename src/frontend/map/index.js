@@ -14,7 +14,8 @@
  *   - state.js            — centralised mutable state
  */
 
-import mapboxgl from 'mapbox-gl'
+import * as maplibregl from 'maplibre-gl'
+import * as pmtiles from 'pmtiles'
 import { fetchMapRegions, fetchSolarData } from '../api.js'
 import { MAP_CONFIG, MAP_VIEWS } from '../mapConfig.js'
 import { state } from './state.js'
@@ -120,9 +121,9 @@ export async function initMap () {
     return
   }
 
-  // Dummy token — all Mapbox API requests are proxied through the backend
-  // which injects the real token. Do not replace this with a real key.
-  mapboxgl.accessToken = 'pk.dummy'
+  // Initialize PMTiles protocol
+  let protocol = new pmtiles.Protocol();
+  maplibregl.addProtocol('pmtiles', protocol.tile);
 
   createMapWithRetry()
 }
@@ -138,7 +139,7 @@ function createMapWithRetry (attempt = 1) {
     setStatusDot('pulse')
   }
 
-  const map = new mapboxgl.Map({
+  const map = new maplibregl.Map({
     container: 'map',
     ...MAP_CONFIG,
     center: MAP_VIEWS.DEFAULT.center,
@@ -163,7 +164,7 @@ function createMapWithRetry (attempt = 1) {
   // handle genuine failures so transient tile/telemetry errors
   // don't prematurely mark the map as broken.
   map.on('error', e => {
-    console.error('Mapbox error:', e.error?.message || e)
+    console.error('MapLibre error:', e.error?.message || e)
   })
 
   map.on('load', () => {
