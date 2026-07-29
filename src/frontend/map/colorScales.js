@@ -11,15 +11,15 @@
 // ---------------------------------------------------------------------------
 
 export const SOLAR_COLORS = {
-  c0: '#1e293b', // Zero / Base Slate
-  c1: '#7a6021', // Very Low / Dark Amber
-  c2: '#9e7924', // Low / Amber
-  c3: '#c49323', // Med-Low / Light Amber
-  c4: '#d18b24', // Medium / Orange-Amber
-  c5: '#d16a24', // Med-High / Orange
-  c6: '#c24b1d', // High / Burnt Orange
-  c7: '#a62d17', // Very High / Red
-  c8: '#7a1811', // Max / Dark Red
+  c0: '#fff9c4', // Zero / Pale Yellow
+  c1: '#fff176', // Very Low / Light Yellow
+  c2: '#ffd54f', // Low / Yellow
+  c3: '#ffb300', // Med-Low / Amber
+  c4: '#fb8c00', // Medium / Orange
+  c5: '#f4511e', // Med-High / Deep Orange
+  c6: '#e53935', // High / Red
+  c7: '#c62828', // Very High / Dark Red
+  c8: '#8e0000', // Max / Very Dark Red
 }
 
 /** Ordered array matching stop indices → colours. */
