@@ -32,3 +32,7 @@ def get_river_stations_store(request: Request) -> CacheStore:
 
 def get_river_readings_store(request: Request) -> CacheStore:
     return request.app.state.river_readings_store
+
+
+def get_solar_it_store(request: Request) -> CacheStore:
+    return request.app.state.solar_it_store

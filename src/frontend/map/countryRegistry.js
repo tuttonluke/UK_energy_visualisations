@@ -211,6 +211,23 @@ export const COUNTRIES = {
     hasMicroData: false,
     mapView: MAP_VIEWS.PORTUGAL,
   },
+
+  italy: {
+    key: 'italy',
+    idPrefix: 'it',
+    displayTitle: 'ITALY',
+    statsLabel: 'Total Italy Output',
+    featureIdProp: 'bidding_zone',
+    featureIdFallbackProp: null,
+    displayNameProp: 'zone_name',
+    displaySubProp: 'reg_name',
+    displaySubFallback: 'Italy',
+    displayIdProp: 'bidding_zone',
+    displayIdFallback: 'IT',
+    dataSource: 'ENTSO-E',
+    hasMicroData: true,
+    mapView: MAP_VIEWS.ITALY,
+  },
 }
 
 /** Ordered array of country keys (stable iteration order). */
