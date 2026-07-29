@@ -9,7 +9,7 @@ import {
 import { updateLegend } from './legend.js'
 
 // ---------------------------------------------------------------------------
-// Named constants for Mapbox source and layer IDs
+// Named constants for MapLibre source and layer IDs
 // ---------------------------------------------------------------------------
 
 export const SOURCE_IDS = {
@@ -28,7 +28,7 @@ export const LAYER_IDS = {
 // ---------------------------------------------------------------------------
 
 /**
- * Add all Mapbox sources and layers for the solar map.
+ * Add all MapLibre sources and layers for the solar map.
  * Called once when data first arrives.
  *
  * @param {object} geojsonData        - Enriched region FeatureCollection
@@ -97,7 +97,7 @@ export function addMapLayers (geojsonData, outlineGeojsonData) {
 // ---------------------------------------------------------------------------
 
 /**
- * Build the Mapbox expression that evaluates to true when a feature
+ * Build the MapLibre expression that evaluates to true when a feature
  * belongs to the selected country and that country has micro data.
  */
 function buildIsMicroExpression (selCountry) {

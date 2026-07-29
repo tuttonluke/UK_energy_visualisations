@@ -1,6 +1,5 @@
 scratch
 .vscode
-src/backend/mapbox_quota.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

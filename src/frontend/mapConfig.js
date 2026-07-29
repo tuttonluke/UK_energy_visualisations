@@ -1,5 +1,3 @@
-import { BACKEND_URL } from './api.js'
-
 export const MAP_VIEWS = {
   DEFAULT: { center: [-1, 48.0], zoom: 3 },
   UK: { center: [-2.5, 54.0], zoom: 4.8 },
@@ -26,7 +24,8 @@ export const MAP_CONFIG = {
         url: "pmtiles:///map_data.pmtiles"
       }
     },
-    glyphs: "https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf",
+    // Self-hosted font glyphs — avoids external dependency on GitHub Pages
+    glyphs: "/fonts/{fontstack}/{range}.pbf",
     layers: [
       {
         id: "background",
@@ -51,6 +50,20 @@ export const MAP_CONFIG = {
         "source-layer": "water",
         paint: {
           "fill-color": "#0f172a" // Same as background
+        }
+      },
+      {
+        // Waterway lines (rivers, streams). Styled subtly by default;
+        // envMap.js overrides paint properties for the Environment tab.
+        // Depends on PMTiles containing a "physical_line" source-layer.
+        id: "waterway",
+        type: "line",
+        source: "protomaps",
+        "source-layer": "physical_line",
+        paint: {
+          "line-color": "#1e3a5f",
+          "line-width": 1,
+          "line-opacity": 0.3
         }
       },
       {
