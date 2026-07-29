@@ -4,6 +4,7 @@ from dependencies import (
     get_solar_be_store,
     get_solar_fr_store,
     get_solar_uk_store,
+    get_solar_it_store,
 )
 from fastapi import APIRouter, Depends, HTTPException, Request
 from rate_limiter import limiter
@@ -79,6 +80,20 @@ async def get_solar_belgium_data(
         raise HTTPException(
             status_code=503,
             detail="Belgian solar data is currently unavailable. Please try again later.",
+        )
+    return data
+
+
+@router.get("/solar/italy", response_model=SolarResponse)
+@limiter.limit("60/minute")
+async def get_solar_italy_data(
+    request: Request, solar_it_store: CacheStore = Depends(get_solar_it_store)
+):
+    data = await solar_it_store.get()
+    if data is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Italian solar data is currently unavailable. Please try again later.",
         )
     return data
 

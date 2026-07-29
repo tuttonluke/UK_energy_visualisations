@@ -20,8 +20,8 @@ async def fetch_energy_charts_live():
 
     for i, country in enumerate(COUNTRIES):
         if i > 0:
-            # Respect API rate limits (strictly 1 req/sec limit)
-            await asyncio.sleep(1.5)
+            # Respect API rate limits - space out requests to avoid 429 Too Many Requests
+            await asyncio.sleep(5.0)
 
         url = f"https://api.energy-charts.info/public_power?country={country}"
 

@@ -2,24 +2,22 @@ import logging
 import os
 from contextlib import asynccontextmanager
 
-import httpx
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from rate_limiter import limiter
 from routers import generation, river_levels, solar
 from services.cache_store import CacheStore
 from services.environment_agency import fetch_ea_readings, fetch_ea_stations
 from services.generation_aggregator import GenerationAggregator
-from services.http_client import get_client
 from services.orchestrator import BackgroundOrchestrator
 from services.solar_data.belgium_elia import fetch_belgium_live
 from services.solar_data.denmark_energinet import fetch_denmark_live
 from services.solar_data.energy_charts import fetch_energy_charts_live
 from services.solar_data.france_rte import fetch_rte_live
+from services.solar_data.italy_entsoe import fetch_italy_entsoe
 from services.solar_data.uk_pvlive import fetch_pvlive_live
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -44,6 +42,7 @@ solar_de_store = None  # Deprecated, use energy_charts_store
 energy_charts_store = CacheStore("energy_charts", fetch_energy_charts_live)
 solar_dk_store = CacheStore("solar_dk", fetch_denmark_live)
 solar_be_store = CacheStore("solar_be", fetch_belgium_live)
+solar_it_store = CacheStore("solar_it", fetch_italy_entsoe)
 
 # Generation plots
 generation_store = CacheStore("generation", GenerationAggregator.fetch_aggregated_data)
@@ -61,6 +60,7 @@ orchestrator.register("solar_fr", solar_fr_store.update, 300)
 orchestrator.register("energy_charts", energy_charts_store.update, 300)
 orchestrator.register("solar_dk", solar_dk_store.update, 300)
 orchestrator.register("solar_be", solar_be_store.update, 300)
+orchestrator.register("solar_it", solar_it_store.update, 300)
 
 # Generation plots
 orchestrator.register("generation", generation_store.update, 300)
@@ -90,6 +90,7 @@ async def lifespan(app: FastAPI):
     app.state.energy_charts_store = energy_charts_store
     app.state.solar_dk_store = solar_dk_store
     app.state.solar_be_store = solar_be_store
+    app.state.solar_it_store = solar_it_store
     app.state.generation_store = generation_store
     app.state.river_stations_store = river_stations_store
     app.state.river_readings_store = river_readings_store
@@ -155,8 +156,6 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 app.include_router(solar.router, prefix="/api/solar", tags=["solar"])
 app.include_router(generation.router, prefix="/api/generation", tags=["generation"])
 app.include_router(river_levels.router, prefix="/api/environment", tags=["environment"])
-
-
 
 
 if __name__ == "__main__":
