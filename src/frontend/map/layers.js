@@ -143,14 +143,30 @@ export function updateMapStyles () {
     macroColorExp,
   ])
 
-  // Region borders: visible for selected micro regions, soft on hover otherwise
+  // Region borders: thick colored outline for hovered micro region, default for other micro regions, soft for macro hover
+  mapInstance.setPaintProperty(LAYER_IDS.REGIONS_BORDERS, 'line-color', [
+    'case',
+    ['all', isMicro, ['boolean', ['feature-state', 'hover'], false]],
+    microColorExp,
+    '#94a3b8',
+  ])
+
+  mapInstance.setPaintProperty(LAYER_IDS.REGIONS_BORDERS, 'line-width', [
+    'case',
+    ['all', isMicro, ['boolean', ['feature-state', 'hover'], false]],
+    2.5,
+    0.5,
+  ])
+
   mapInstance.setPaintProperty(LAYER_IDS.REGIONS_BORDERS, 'line-opacity', [
     'case',
+    ['all', isMicro, ['boolean', ['feature-state', 'hover'], false]],
+    1.0, // thick white border opacity on micro hover
     isMicro,
-    1.0,
+    1.0, // normal internal borders opacity when country is selected
     ['boolean', ['feature-state', 'hover'], false],
-    0.6,
-    0.0,
+    0.6, // soft internal borders on macro hover
+    0.0, // hidden otherwise
   ])
 
   // Country outline colour matched to fill via macro expression

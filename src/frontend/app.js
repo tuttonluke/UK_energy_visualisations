@@ -37,7 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Only init the default visible tab — maps defer until their tab is clicked
   initCharts()
 
-  // Polling every 5 minutes — only refresh the active tab
+  // Polling every 30 seconds — only refresh the active tab
+  // This allows the frontend to quickly pick up data as the backend background tasks finish fetching it.
   setInterval(() => {
     if (activeTab === 'tab-generation') {
       initCharts()
@@ -46,5 +47,5 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (activeTab === 'tab-environment') {
       updateEnvMapData()
     }
-  }, 300_000)
+  }, 30_000)
 })
