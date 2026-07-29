@@ -4,9 +4,9 @@
  * This thin orchestrator wires together the sub-modules.
  * All heavy logic lives in dedicated files:
  *   - countryRegistry.js  — data-driven country configuration
- *   - colorScales.js      — palettes and Mapbox expression builders
+ *   - colorScales.js      — palettes and MapLibre expression builders
  *   - dataEnricher.js     — TopoJSON → enriched GeoJSON pipeline
- *   - layers.js           — Mapbox source/layer management and styling
+ *   - layers.js           — MapLibre source/layer management and styling
  *   - events.js           — hover, click, toggle event handlers
  *   - tooltip.js          — popup HTML builder
  *   - statsPanel.js       — stats panel DOM updates
@@ -15,7 +15,7 @@
  */
 
 import * as maplibregl from 'maplibre-gl'
-import * as pmtiles from 'pmtiles'
+import { ensurePMTilesProtocol } from '../mapSetup.js'
 import { fetchMapRegions, fetchSolarData } from '../api.js'
 import { MAP_CONFIG, MAP_VIEWS } from '../mapConfig.js'
 import { state } from './state.js'
@@ -108,7 +108,7 @@ async function loadMapData () {
 // ---------------------------------------------------------------------------
 
 /**
- * Initialise the Mapbox map instance and trigger the first data load.
+ * Initialise the MapLibre map instance and trigger the first data load.
  * Safe to call multiple times — subsequent calls only resize.
  *
  * Uses an automatic retry mechanism: if the map style fails to load
@@ -121,9 +121,7 @@ export async function initMap () {
     return
   }
 
-  // Initialize PMTiles protocol
-  let protocol = new pmtiles.Protocol();
-  maplibregl.addProtocol('pmtiles', protocol.tile);
+  ensurePMTilesProtocol()
 
   createMapWithRetry()
 }

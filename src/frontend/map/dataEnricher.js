@@ -39,13 +39,22 @@ function getFeatureIdValue (properties, config) {
 
 /**
  * Process raw TopoJSON + solar data into enriched GeoJSON
- * ready for Mapbox GL, plus country outlines.
+ * ready for MapLibre GL, plus country outlines.
  *
  * @param {object} topoData  - Raw TopoJSON keyed by country
  * @param {object} solarData - Solar generation data keyed by country
  * @returns {{ geojsonData: object, outlineGeojsonData: object, countryFeatureIds: Record<string, string[]> }}
  */
 export function enrichMapData (topoData, solarData) {
+  // Only process countries whose boundary data was successfully loaded.
+  // This prevents a single failed TopoJSON fetch from crashing the entire map.
+  const availableKeys = COUNTRY_KEYS.filter(key => topoData[key])
+
+  if (availableKeys.length < COUNTRY_KEYS.length) {
+    const missing = COUNTRY_KEYS.filter(key => !topoData[key])
+    console.warn(`Boundary data missing for: ${missing.join(', ')} — these countries will not appear on the map`)
+  }
+
   const countryFeatureIds = {}
   const allFeatures = []
   const outlineFeatures = []
@@ -54,7 +63,7 @@ export function enrichMapData (topoData, solarData) {
   // 1. Convert TopoJSON → GeoJSON per country
   // -----------------------------------------------------------------------
   const geojsonByCountry = {}
-  COUNTRY_KEYS.forEach(key => {
+  availableKeys.forEach(key => {
     geojsonByCountry[key] = topojson.feature(
       topoData[key],
       topoData[key].objects.data
@@ -62,30 +71,31 @@ export function enrichMapData (topoData, solarData) {
   })
 
   // -----------------------------------------------------------------------
-  // 2. Compute areas (only on first load — boundaries are static)
+  // 2. Compute areas (per-country cache — boundaries are static so each
+  //    country's area only needs to be computed once)
   // -----------------------------------------------------------------------
-  if (!cachedAreaData) {
-    cachedAreaData = {}
-    COUNTRY_KEYS.forEach(key => {
-      const config = COUNTRIES[key]
-      let totalArea = 0
-      const featureAreas = new Map()
+  if (!cachedAreaData) cachedAreaData = {}
 
-      geojsonByCountry[key].features.forEach(f => {
-        const areaSqKm = area(f) / 1_000_000
-        const featureId = getFeatureIdValue(f.properties, config)
-        featureAreas.set(featureId, areaSqKm)
-        totalArea += areaSqKm
-      })
+  availableKeys.forEach(key => {
+    if (cachedAreaData[key]) return // Already computed for this country
+    const config = COUNTRIES[key]
+    let totalArea = 0
+    const featureAreas = new Map()
 
-      cachedAreaData[key] = { totalArea, featureAreas }
+    geojsonByCountry[key].features.forEach(f => {
+      const areaSqKm = area(f) / 1_000_000
+      const featureId = getFeatureIdValue(f.properties, config)
+      featureAreas.set(featureId, areaSqKm)
+      totalArea += areaSqKm
     })
-  }
+
+    cachedAreaData[key] = { totalArea, featureAreas }
+  })
 
   // -----------------------------------------------------------------------
   // 3. Enrich features in a single pass per country
   // -----------------------------------------------------------------------
-  COUNTRY_KEYS.forEach(key => {
+  availableKeys.forEach(key => {
     const config = COUNTRIES[key]
     const countryData = solarData[key]
     const isUnavailable = !countryData

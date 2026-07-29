@@ -1,5 +1,5 @@
 /**
- * Color palettes and Mapbox GL interpolation expression builders.
+ * Color palettes and MapLibre GL interpolation expression builders.
  *
  * Each energy source can define its own palette and scale stops.
  * Currently only solar is implemented; adding wind/hydro is a
@@ -42,11 +42,11 @@ export const MICRO_ABSOLUTE_STOPS = [0, 25, 100, 250, 500, 1000, 2000, 3500, 500
 // ---------------------------------------------------------------------------
 
 /**
- * Build a Mapbox GL JS `interpolate` expression for colouring features.
+ * Build a MapLibre GL JS `interpolate` expression for colouring features.
  *
  * @param {string} property  - GeoJSON property name to read (e.g. 'macroNormalized')
  * @param {number[]} stops   - Numeric breakpoints (must have exactly 9 entries)
- * @returns {Array}          - Mapbox GL expression
+ * @returns {Array}          - MapLibre GL expression
  */
 export function buildColorExpression (property, stops) {
   const pairs = stops.flatMap((stop, i) => [stop, SOLAR_COLOR_ARRAY[i]])

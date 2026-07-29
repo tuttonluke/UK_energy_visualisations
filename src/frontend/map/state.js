@@ -31,7 +31,7 @@ export const state = {
   isNormalized: true,
 
   /**
-   * Map of country key → array of Mapbox feature IDs.
+   * Map of country key → array of MapLibre feature IDs.
    * Rebuilt on every data refresh to avoid unbounded growth.
    * @type {Record<string, string[]>}
    */

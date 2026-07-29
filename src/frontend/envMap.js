@@ -1,7 +1,8 @@
-import { fetchRiverLevels, BACKEND_URL } from './api.js'
+import { fetchRiverLevels } from './api.js'
 import { MAP_CONFIG } from './mapConfig.js'
 import { escapeHtml } from './utils.js'
 import * as maplibregl from 'maplibre-gl'
+import { ensurePMTilesProtocol } from './mapSetup.js'
 
 let envMapInstance = null
 
@@ -193,6 +194,7 @@ export async function initEnvMap () {
     return
   }
 
+  ensurePMTilesProtocol()
   createEnvMapWithRetry()
 }
 
