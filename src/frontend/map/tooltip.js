@@ -30,6 +30,7 @@ export function buildTooltipHtml ({
   outputLabel,
   displayRegionData,
   displayNormalizedData,
+  disabledHoverMessage,
 }) {
   const config = COUNTRIES[country]
   const sourceLabel = config?.dataSource || 'Unknown'
@@ -47,16 +48,21 @@ export function buildTooltipHtml ({
         ${isMicro ? `<p style="margin:0; color:var(--text-muted); font-size:0.75rem; opacity: 0.8;">ID: ${escapeHtml(String(displayId))}</p>` : ''}
         <hr style="border-color:var(--border-color); margin:8px 0;">
         <p style="margin:0; color:var(--text-muted); font-size:0.875rem;">${outputLabel}</p>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 6px;">
-            <div>
-                <p style="margin:0; color:var(--text-muted); font-size:0.75rem;">Absolute</p>
-                <p style="margin:0; color:var(--text-main); font-size:1.125rem; font-weight:bold; white-space:nowrap;">${escapeHtml(displayRegionData)}</p>
-            </div>
-            <div>
-                <p style="margin:0; color:var(--text-muted); font-size:0.75rem;">Density</p>
-                <p style="margin:0; color:var(--text-main); font-size:1.125rem; font-weight:bold; white-space:nowrap;">${escapeHtml(displayNormalizedData)}</p>
-            </div>
-        </div>
+        ${disabledHoverMessage 
+            ? `<div style="margin-top: 6px; padding: 6px 8px; background: rgba(255,255,255,0.1); border-radius: 4px;">
+                 <p style="margin:0; color:var(--text-muted); font-size:0.875rem; font-style: italic;">${escapeHtml(disabledHoverMessage)}</p>
+               </div>`
+            : `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 6px;">
+                <div>
+                    <p style="margin:0; color:var(--text-muted); font-size:0.75rem;">Absolute</p>
+                    <p style="margin:0; color:var(--text-main); font-size:1.125rem; font-weight:bold; white-space:nowrap;">${escapeHtml(displayRegionData)}</p>
+                </div>
+                <div>
+                    <p style="margin:0; color:var(--text-muted); font-size:0.75rem;">Density</p>
+                    <p style="margin:0; color:var(--text-main); font-size:1.125rem; font-weight:bold; white-space:nowrap;">${escapeHtml(displayNormalizedData)}</p>
+                </div>
+            </div>`
+        }
         <hr style="border-color:var(--border-color); margin:8px 0;">
         <p style="margin:0; color:var(--text-muted); font-size:0.75rem; text-align: left; opacity: 0.8;">Source: ${escapeHtml(sourceLabel)}</p>
     </div>

@@ -155,6 +155,7 @@ export function registerMapEvents () {
           outputLabel: getOutputLabel(country, isMicro),
           displayRegionData,
           displayNormalizedData,
+          disabledHoverMessage: config?.disabledHoverMessage,
         })
       )
       .addTo(mapInstance)

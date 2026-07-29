@@ -13,6 +13,8 @@ export const MAP_VIEWS = {
   BELGIUM: { center: [4.46, 50.50], zoom: 6.5 },
   PORTUGAL: { center: [-8.2, 39.4], zoom: 6.0 },
   ITALY: { center: [12.56, 41.87], zoom: 5.0 },
+  SWEDEN: { center: [16.5, 62.0], zoom: 3.5 },
+  NORWAY: { center: [10.5, 62.0], zoom: 3.5 },
 }
 
 export const MAP_CONFIG = {
