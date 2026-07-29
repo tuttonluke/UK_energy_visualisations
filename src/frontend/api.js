@@ -85,14 +85,19 @@ export async function fetchGenerationSummary () {
 }
 
 export async function fetchSolarData () {
-  const [uk, france, energy_charts, denmark, belgium, italy] = await Promise.all([
+  const [uk, france, energy_charts, denmark, belgium, italy, sweden, norway] = await Promise.all([
     fetchWithCheck(`${API_BASE_URL}/solar/solar`),
     fetchWithCheck(`${API_BASE_URL}/solar/solar/france`),
     fetchWithCheck(`${API_BASE_URL}/solar/solar/energy_charts`),
     fetchWithCheck(`${API_BASE_URL}/solar/solar/denmark`),
     fetchWithCheck(`${API_BASE_URL}/solar/solar/belgium`),
-    fetchWithCheck(`${API_BASE_URL}/solar/solar/italy`)
+    fetchWithCheck(`${API_BASE_URL}/solar/solar/italy`),
+    fetchWithCheck(`${API_BASE_URL}/solar/solar/sweden`),
+    fetchWithCheck(`${API_BASE_URL}/solar/solar/norway`)
   ])
+  
+  const ireland = null;
+  const northern_ireland = null;
 
   // Flatten energy_charts into the returned object, mapping short codes to full names
   const mappedEnergyCharts = energy_charts ? {
@@ -106,7 +111,7 @@ export async function fetchSolarData () {
     portugal: energy_charts.pt
   } : {}
 
-  const result = { uk, france, denmark, belgium, italy, ...mappedEnergyCharts }
+  const result = { uk, france, denmark, belgium, italy, ireland, northern_ireland, sweden, norway, ...mappedEnergyCharts }
 
   // Return null only when every single endpoint failed — lets callers
   // distinguish "no data at all" from "some countries unavailable".
@@ -120,7 +125,7 @@ export async function fetchRiverLevels () {
 
 // Cache buster for static TopoJSON files.
 // Bump this value whenever boundary files are updated to invalidate browser caches.
-const STATIC_VERSION = '2024.4'
+const STATIC_VERSION = '2024.5'
 
 /** Country key → TopoJSON filename mapping. */
 const REGION_FILES = [
@@ -137,6 +142,10 @@ const REGION_FILES = [
   ['belgium', 'belgium-regions.topojson'],
   ['portugal', 'portugal.topojson'],
   ['italy', 'italy.topojson'],
+  ['ireland', 'ireland.topojson'],
+  ['northern_ireland', 'northern_ireland.topojson'],
+  ['sweden', 'sweden.topojson'],
+  ['norway', 'norway.topojson'],
 ]
 
 /**

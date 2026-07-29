@@ -18,6 +18,10 @@ from services.solar_data.denmark_energinet import fetch_denmark_live
 from services.solar_data.energy_charts import fetch_energy_charts_live
 from services.solar_data.france_rte import fetch_rte_live
 from services.solar_data.italy_entsoe import fetch_italy_entsoe
+from services.solar_data.ireland_entsoe import fetch_ireland_entsoe
+from services.solar_data.ni_entsoe import fetch_ni_entsoe
+from services.solar_data.sweden_entsoe import fetch_sweden_entsoe
+from services.solar_data.norway_entsoe import fetch_norway_entsoe
 from services.solar_data.uk_pvlive import fetch_pvlive_live
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -43,6 +47,10 @@ energy_charts_store = CacheStore("energy_charts", fetch_energy_charts_live)
 solar_dk_store = CacheStore("solar_dk", fetch_denmark_live)
 solar_be_store = CacheStore("solar_be", fetch_belgium_live)
 solar_it_store = CacheStore("solar_it", fetch_italy_entsoe)
+solar_ie_store = CacheStore("solar_ie", fetch_ireland_entsoe)
+solar_ni_store = CacheStore("solar_ni", fetch_ni_entsoe)
+solar_se_store = CacheStore("solar_se", fetch_sweden_entsoe)
+solar_no_store = CacheStore("solar_no", fetch_norway_entsoe)
 
 # Generation plots
 generation_store = CacheStore("generation", GenerationAggregator.fetch_aggregated_data)
@@ -61,6 +69,10 @@ orchestrator.register("energy_charts", energy_charts_store.update, 300)
 orchestrator.register("solar_dk", solar_dk_store.update, 300)
 orchestrator.register("solar_be", solar_be_store.update, 300)
 orchestrator.register("solar_it", solar_it_store.update, 300)
+orchestrator.register("solar_ie", solar_ie_store.update, 300)
+orchestrator.register("solar_ni", solar_ni_store.update, 300)
+orchestrator.register("solar_se", solar_se_store.update, 300)
+orchestrator.register("solar_no", solar_no_store.update, 300)
 
 # Generation plots
 orchestrator.register("generation", generation_store.update, 300)
@@ -91,6 +103,10 @@ async def lifespan(app: FastAPI):
     app.state.solar_dk_store = solar_dk_store
     app.state.solar_be_store = solar_be_store
     app.state.solar_it_store = solar_it_store
+    app.state.solar_ie_store = solar_ie_store
+    app.state.solar_ni_store = solar_ni_store
+    app.state.solar_se_store = solar_se_store
+    app.state.solar_no_store = solar_no_store
     app.state.generation_store = generation_store
     app.state.river_stations_store = river_stations_store
     app.state.river_readings_store = river_readings_store
