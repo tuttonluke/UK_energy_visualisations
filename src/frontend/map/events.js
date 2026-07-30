@@ -48,9 +48,12 @@ function clearHover () {
  *
  * @returns {{ displayRegionData: string, displayNormalizedData: string }}
  */
-function formatGenerationDisplay (isUnavailable, generationMw, normalizedValue) {
-  if (isUnavailable) {
+function formatGenerationDisplay (isCountryUnavailable, isMicroUnavailable, generationMw, normalizedValue) {
+  if (isCountryUnavailable) {
     return { displayRegionData: 'Data Unavailable', displayNormalizedData: '--' }
+  }
+  if (isMicroUnavailable) {
+    return { displayRegionData: 'Data Not Reported', displayNormalizedData: '--' }
   }
   if (generationMw !== undefined && generationMw !== null) {
     return {
@@ -138,6 +141,7 @@ export function registerMapEvents () {
 
     const { displayRegionData, displayNormalizedData } = formatGenerationDisplay(
       feature.properties.unavailable,
+      isMicro && feature.properties.microUnavailable,
       generationMw,
       normalizedValue
     )
@@ -156,6 +160,8 @@ export function registerMapEvents () {
           displayRegionData,
           displayNormalizedData,
           disabledHoverMessage: config?.disabledHoverMessage,
+          generatedTime: state.currentSolarData[country]?.timestamp,
+          isDataUnavailable: feature.properties.unavailable || (isMicro && feature.properties.microUnavailable),
         })
       )
       .addTo(mapInstance)

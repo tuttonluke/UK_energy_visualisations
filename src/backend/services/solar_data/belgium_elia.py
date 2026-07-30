@@ -22,16 +22,23 @@ async def fetch_belgium_live():
         # Regions of interest for the macro-level map
         target_regions = ["Flanders", "Wallonia", "Brussels"]
         latest_vals = {}
+        latest_timestamp = None
 
         for record in records:
             region = record.get("region")
             realtime = record.get("realtime")
+            timestamp = record.get("datetime")
             # If realtime is null, it hasn't happened yet, fall back to mostrecentforecast for near-realtime
             val = realtime if realtime is not None else record.get("mostrecentforecast")
 
             if region in target_regions and region not in latest_vals:
                 if val is not None:
                     latest_vals[region] = val
+                    if timestamp:
+                        # Opendatasoft datetime often has +00:00 or similar
+                        ts_formatted = timestamp.replace("+00:00", "Z")
+                        if latest_timestamp is None or ts_formatted > latest_timestamp:
+                            latest_timestamp = ts_formatted
 
             if len(latest_vals) == len(target_regions):
                 break
@@ -51,6 +58,8 @@ async def fetch_belgium_live():
             total_gen += val
 
         flat_data["totalGen"] = round(total_gen, 1)
+        if latest_timestamp:
+            flat_data["timestamp"] = latest_timestamp
         return flat_data
     except Exception as e:
         logger.error(f"Belgium Live fetch failed: {e}")

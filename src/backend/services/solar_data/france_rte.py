@@ -49,18 +49,27 @@ async def fetch_rte_live():
         data = res.json()
 
         new_data = {}
+        latest_timestamp = None
 
         for record in data.get("results", []):
             insee_code = record.get("code_insee_region")
             solar_gen = record.get("solaire")
+            timestamp = record.get("date_heure")
 
             if insee_code and solar_gen is not None and solar_gen >= 0:
                 # Keep only the most recent reading for each region
                 if insee_code not in new_data:
                     new_data[insee_code] = solar_gen
+                if timestamp:
+                    # Opendatasoft returns ISO strings with +00:00, ensure it matches Z or just use as is
+                    ts_formatted = timestamp.replace("+00:00", "Z")
+                    if latest_timestamp is None or ts_formatted > latest_timestamp:
+                        latest_timestamp = ts_formatted
 
         total_generation_mw = sum(new_data.values())
         new_data["totalGen"] = round(total_generation_mw, 1)
+        if latest_timestamp:
+            new_data["timestamp"] = latest_timestamp
         return new_data
     except Exception as e:
         logger.error(f"RTE Live fetch failed: {e}")

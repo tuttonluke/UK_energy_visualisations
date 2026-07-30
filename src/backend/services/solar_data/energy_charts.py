@@ -47,15 +47,22 @@ async def fetch_energy_charts_live():
                 continue
 
             latest_value = 0
+            latest_timestamp = None
 
             # Scan backwards for the latest non-null value
             for j in range(len(solar_data_series) - 1, -1, -1):
                 val = solar_data_series[j]
                 if val is not None:
                     latest_value = val
+                    if j < len(unix_seconds_series):
+                        import datetime
+                        latest_timestamp = datetime.datetime.fromtimestamp(unix_seconds_series[j], tz=datetime.timezone.utc).isoformat()
                     break
 
-            results[country] = {"totalGen": round(latest_value, 1)}
+            results[country] = {
+                "totalGen": round(latest_value, 1),
+                "timestamp": latest_timestamp
+            }
 
         except Exception as e:
             logger.error(f"Energy-Charts Live fetch failed for {country}: {e}")

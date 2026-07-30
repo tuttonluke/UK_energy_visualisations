@@ -10,6 +10,7 @@ import { MAP_VIEWS } from '../mapConfig.js'
 export const COUNTRIES = {
   uk: {
     key: 'uk',
+    timeZone: 'Europe/London',
     idPrefix: 'uk',
     displayTitle: 'GREAT BRITAIN',
     statsLabel: 'Total GB Output',
@@ -27,6 +28,7 @@ export const COUNTRIES = {
 
   france: {
     key: 'france',
+    timeZone: 'Europe/Paris',
     idPrefix: 'fr',
     displayTitle: 'FRANCE',
     statsLabel: 'Total France Output',
@@ -44,6 +46,7 @@ export const COUNTRIES = {
 
   germany: {
     key: 'germany',
+    timeZone: 'Europe/Berlin',
     idPrefix: 'de',
     displayTitle: 'GERMANY',
     statsLabel: 'Total Germany Output',
@@ -61,6 +64,7 @@ export const COUNTRIES = {
 
     spain: {
     key: 'spain',
+    timeZone: 'Europe/Madrid',
     idPrefix: 'es',
     displayTitle: 'SPAIN',
     statsLabel: 'Total Spain Output',
@@ -78,6 +82,7 @@ export const COUNTRIES = {
 
   netherlands: {
     key: 'nl',
+    timeZone: 'Europe/Amsterdam',
     idPrefix: 'nl',
     displayTitle: 'NETHERLANDS',
     statsLabel: 'Total Netherlands Output',
@@ -95,6 +100,7 @@ export const COUNTRIES = {
 
   austria: {
     key: 'at',
+    timeZone: 'Europe/Vienna',
     idPrefix: 'at',
     displayTitle: 'AUSTRIA',
     statsLabel: 'Total Austria Output',
@@ -112,6 +118,7 @@ export const COUNTRIES = {
 
   switzerland: {
     key: 'ch',
+    timeZone: 'Europe/Zurich',
     idPrefix: 'ch',
     displayTitle: 'SWITZERLAND',
     statsLabel: 'Total Switzerland Output',
@@ -129,6 +136,7 @@ export const COUNTRIES = {
 
   poland: {
     key: 'pl',
+    timeZone: 'Europe/Warsaw',
     idPrefix: 'pl',
     displayTitle: 'POLAND',
     statsLabel: 'Total Poland Output',
@@ -146,6 +154,7 @@ export const COUNTRIES = {
 
   czechia: {
     key: 'cz',
+    timeZone: 'Europe/Prague',
     idPrefix: 'cz',
     displayTitle: 'CZECHIA',
     statsLabel: 'Total Czechia Output',
@@ -163,6 +172,7 @@ export const COUNTRIES = {
 
   denmark: {
     key: 'denmark',
+    timeZone: 'Europe/Copenhagen',
     idPrefix: 'dk',
     displayTitle: 'DENMARK',
     statsLabel: 'Total Denmark Output',
@@ -180,6 +190,7 @@ export const COUNTRIES = {
 
   belgium: {
     key: 'belgium',
+    timeZone: 'Europe/Brussels',
     idPrefix: 'be',
     displayTitle: 'BELGIUM',
     statsLabel: 'Total Belgium Output',
@@ -197,6 +208,7 @@ export const COUNTRIES = {
 
   portugal: {
     key: 'portugal',
+    timeZone: 'Europe/Lisbon',
     idPrefix: 'pt',
     displayTitle: 'PORTUGAL',
     statsLabel: 'Total Portugal Output',
@@ -214,6 +226,7 @@ export const COUNTRIES = {
 
   italy: {
     key: 'italy',
+    timeZone: 'Europe/Rome',
     idPrefix: 'it',
     displayTitle: 'ITALY',
     statsLabel: 'Total Italy Output',
@@ -231,6 +244,7 @@ export const COUNTRIES = {
 
   ireland: {
     key: 'ireland',
+    timeZone: 'Europe/Dublin',
     idPrefix: 'ie',
     displayTitle: 'IRELAND',
     statsLabel: 'Total Ireland Output',
@@ -249,6 +263,7 @@ export const COUNTRIES = {
 
   northern_ireland: {
     key: 'northern_ireland',
+    timeZone: 'Europe/London',
     idPrefix: 'ni',
     displayTitle: 'NORTHERN IRELAND',
     statsLabel: 'Total NI Output',
@@ -267,6 +282,7 @@ export const COUNTRIES = {
 
   sweden: {
     key: 'sweden',
+    timeZone: 'Europe/Stockholm',
     idPrefix: 'se',
     displayTitle: 'SWEDEN',
     statsLabel: 'Total Sweden Output',
@@ -284,6 +300,7 @@ export const COUNTRIES = {
 
   norway: {
     key: 'norway',
+    timeZone: 'Europe/Oslo',
     idPrefix: 'no',
     displayTitle: 'NORWAY',
     statsLabel: 'Total Norway Output',
