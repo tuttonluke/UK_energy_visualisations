@@ -7,11 +7,12 @@ import { updateStatsPanel } from './statsPanel.js'
 import { buildTooltipHtml } from './tooltip.js'
 import { initDetailsPanel, openDetailsPanel, closeDetailsPanel } from './detailsPanel.js'
 
-const popup = new maplibregl.Popup({
-  closeButton: false,
-  closeOnClick: false,
-  className: 'custom-popup',
-})
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+/** Details-panel width used as left padding when flying to a country. */
+const PANEL_WIDTH = 380
 
 // ---------------------------------------------------------------------------
 // Hover helpers
@@ -23,7 +24,9 @@ function clearHover () {
   if (!hoveredState) return
 
   if (hoveredState.type === 'macro') {
-    countryFeatureIds[hoveredState.country].forEach(id => {
+    const ids = countryFeatureIds[hoveredState.country]
+    if (!ids) { state.hoveredState = null; return }
+    ids.forEach(id => {
       mapInstance.setFeatureState(
         { source: SOURCE_IDS.REGIONS, id },
         { hover: false }
@@ -69,8 +72,24 @@ function formatGenerationDisplay (isCountryUnavailable, isMicroUnavailable, gene
  */
 function getOutputLabel (country, isMicro) {
   const config = COUNTRIES[country]
-  if (!config?.hasMicroData) return 'National Output:'
+  if (!config) {
+    console.warn(`getOutputLabel: unknown country "${country}"`)
+    return 'National Output:'
+  }
+  if (!config.hasMicroData) return 'National Output:'
   return isMicro ? 'Regional Output:' : 'National Output:'
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/** Deselect the current country, reset the stats panel and map styles. */
+function deselectCountry () {
+  state.selectedCountry = null
+  updateStatsPanel(null, state.currentSolarData)
+  updateMapStyles()
+  closeDetailsPanel()
 }
 
 // ---------------------------------------------------------------------------
@@ -84,10 +103,16 @@ function getOutputLabel (country, isMicro) {
 export function registerMapEvents () {
   const { mapInstance } = state
 
+  const popup = new maplibregl.Popup({
+    closeButton: false,
+    closeOnClick: false,
+    className: 'custom-popup',
+  })
+
   // Initialize details panel close behavior
   initDetailsPanel(() => {
     state.selectedCountry = null
-    updateStatsPanel(state.selectedCountry, state.currentSolarData)
+    updateStatsPanel(null, state.currentSolarData)
     updateMapStyles()
     mapInstance.flyTo(MAP_VIEWS.DEFAULT)
   })
@@ -96,22 +121,35 @@ export function registerMapEvents () {
   // Mousemove — hover highlight + tooltip
   // -----------------------------------------------------------------------
   mapInstance.on('mousemove', LAYER_IDS.REGIONS_FILL, e => {
-    if (e.features.length === 0) return
+    if (!e.features?.length) return
 
     const feature = e.features[0]
     const country = feature.properties.country
     const config = COUNTRIES[country]
     const isMicro = state.selectedCountry === country && config?.hasMicroData
+    const currentRegionId = feature.properties.customId || feature.id
+
+    // Skip redundant hover updates — only reposition the tooltip
+    const { hoveredState } = state
+    if (hoveredState) {
+      const sameTarget =
+        (!isMicro && hoveredState.type === 'macro' && hoveredState.country === country) ||
+        (isMicro && hoveredState.type === 'micro' && hoveredState.id === currentRegionId)
+      if (sameTarget) {
+        popup.setLngLat(e.lngLat)
+        return
+      }
+    }
 
     // Clear previous hover
     clearHover()
 
-    const currentRegionId = feature.properties.customId || feature.id
-
     // Set new hover
     if (!isMicro) {
       // Macro: highlight all regions in the country + outline
-      state.countryFeatureIds[country].forEach(id => {
+      const ids = state.countryFeatureIds[country]
+      if (!ids) return
+      ids.forEach(id => {
         mapInstance.setFeatureState(
           { source: SOURCE_IDS.REGIONS, id },
           { hover: true }
@@ -160,7 +198,7 @@ export function registerMapEvents () {
           displayRegionData,
           displayNormalizedData,
           disabledHoverMessage: config?.disabledHoverMessage,
-          generatedTime: state.currentSolarData[country]?.timestamp,
+          generatedTime: state.currentSolarData?.[country]?.timestamp,
           isDataUnavailable: feature.properties.unavailable || (isMicro && feature.properties.microUnavailable),
         })
       )
@@ -187,7 +225,9 @@ export function registerMapEvents () {
   // Click on a region — select/zoom into country
   // -----------------------------------------------------------------------
   mapInstance.on('click', LAYER_IDS.REGIONS_FILL, e => {
-    if (e.features.length === 0) return
+    if (!e.features?.length) return
+
+    e.originalEvent._handled = true
 
     const clickedCountry = e.features[0].properties.country
     state.selectedCountry = clickedCountry
@@ -198,7 +238,7 @@ export function registerMapEvents () {
     if (config?.mapView) {
       mapInstance.flyTo({
         ...config.mapView,
-        padding: { left: 380, top: 0, right: 0, bottom: 0 }
+        padding: { left: PANEL_WIDTH, top: 0, right: 0, bottom: 0 }
       })
       openDetailsPanel(clickedCountry)
     }
@@ -208,14 +248,12 @@ export function registerMapEvents () {
   // Click outside regions — deselect
   // -----------------------------------------------------------------------
   mapInstance.on('click', e => {
+    if (e.originalEvent._handled) return
     const features = mapInstance.queryRenderedFeatures(e.point, {
       layers: [LAYER_IDS.REGIONS_FILL],
     })
     if (features.length === 0) {
-      state.selectedCountry = null
-      updateStatsPanel(state.selectedCountry, state.currentSolarData)
-      updateMapStyles()
-      closeDetailsPanel()
+      deselectCountry()
     }
   })
 
@@ -226,10 +264,7 @@ export function registerMapEvents () {
   if (statsPanel) {
     statsPanel.addEventListener('click', e => {
       e.stopPropagation()
-      state.selectedCountry = null
-      updateStatsPanel(state.selectedCountry, state.currentSolarData)
-      updateMapStyles()
-      closeDetailsPanel()
+      deselectCountry()
       mapInstance.flyTo(MAP_VIEWS.DEFAULT)
     })
   }
@@ -242,7 +277,7 @@ export function registerMapEvents () {
   const labelMwKm2 = document.getElementById('label-mw-km2')
 
   if (toggle) {
-    toggle.addEventListener('click', e => {
+    toggle.addEventListener('change', e => {
       state.isNormalized = e.target.checked
       if (labelTotalMw && labelMwKm2) {
         labelTotalMw.style.opacity = state.isNormalized ? '0.5' : '1'
@@ -258,16 +293,11 @@ export function registerMapEvents () {
   const resetBtn = document.getElementById('solar-map-reset')
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
-      state.selectedCountry = null
-      updateStatsPanel(state.selectedCountry, state.currentSolarData)
-      updateMapStyles()
-      closeDetailsPanel()
+      deselectCountry()
       mapInstance.flyTo({
-        center: MAP_VIEWS.DEFAULT.center,
-        zoom: MAP_VIEWS.DEFAULT.zoom,
-        pitch: 20,
+        ...MAP_VIEWS.DEFAULT,
         bearing: 0,
-        padding: { left: 0, top: 0, right: 0, bottom: 0 }
+        padding: { left: 0, top: 0, right: 0, bottom: 0 },
       })
     })
   }
