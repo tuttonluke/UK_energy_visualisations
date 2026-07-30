@@ -106,7 +106,7 @@ export function enrichMapData (topoData, solarData) {
     }
 
     countryFeatureIds[key] = []
-    const macroGen = countryData ? countryData.totalGen : 0
+    const macroGen = countryData && countryData.totalGen && countryData.totalGen.solar != null ? countryData.totalGen.solar : 0
 
     geojsonByCountry[key].features.forEach(feature => {
       const featureIdValue = getFeatureIdValue(feature.properties, config)
@@ -122,11 +122,11 @@ export function enrichMapData (topoData, solarData) {
       feature.properties.unavailable = isUnavailable
 
       // Micro generation: only for countries that publish regional data
-      const isMicroUnavailable = config.hasMicroData && (!countryData || countryData[featureIdValue] == null)
+      const isMicroUnavailable = config.hasMicroData && (!countryData || !countryData[featureIdValue] || countryData[featureIdValue].solar == null)
       
       const microGen =
-        config.hasMicroData && countryData && countryData[featureIdValue] != null
-          ? countryData[featureIdValue]
+        config.hasMicroData && countryData && countryData[featureIdValue] && countryData[featureIdValue].solar != null
+          ? countryData[featureIdValue].solar
           : 0
 
       feature.properties.macroGeneration = macroGen

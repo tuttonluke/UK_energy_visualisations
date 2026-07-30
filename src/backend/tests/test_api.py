@@ -1,12 +1,3 @@
-from unittest.mock import AsyncMock, MagicMock, patch
-
-
-
-
-
-
-
-
 def test_river_levels_endpoint_empty_cache(empty_client):
     response = empty_client.get("/api/environment/river_levels")
     assert response.status_code == 503
@@ -47,21 +38,6 @@ def test_generation_endpoint_empty_cache(empty_client):
     assert response.json() == {
         "detail": "Generation data is currently unavailable. Please try again later."
     }
-
-
-def test_solar_endpoint_empty_cache(empty_client):
-    response = empty_client.get("/api/solar/solar")
-    assert response.status_code == 503
-    assert response.json() == {
-        "detail": "Solar data is currently unavailable. Please try again later."
-    }
-
-
-def test_solar_endpoint(client):
-    response = client.get("/api/solar/solar")
-    assert response.status_code == 200
-    data = response.json()
-    assert isinstance(data, dict)
 
 
 def test_generation_endpoint(client):

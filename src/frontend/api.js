@@ -85,19 +85,11 @@ export async function fetchGenerationSummary () {
 }
 
 export async function fetchSolarData () {
-  const [uk, france, energy_charts, denmark, belgium, italy, sweden, norway] = await Promise.all([
-    fetchWithCheck(`${API_BASE_URL}/solar/solar`),
-    fetchWithCheck(`${API_BASE_URL}/solar/solar/france`),
-    fetchWithCheck(`${API_BASE_URL}/solar/solar/energy_charts`),
-    fetchWithCheck(`${API_BASE_URL}/solar/solar/denmark`),
-    fetchWithCheck(`${API_BASE_URL}/solar/solar/belgium`),
-    fetchWithCheck(`${API_BASE_URL}/solar/solar/italy`),
-    fetchWithCheck(`${API_BASE_URL}/solar/solar/sweden`),
-    fetchWithCheck(`${API_BASE_URL}/solar/solar/norway`)
-  ])
+  const bulkData = await fetchWithCheck(`${API_BASE_URL}/solar/`)
   
-  const ireland = null;
-  const northern_ireland = null;
+  if (!bulkData) return null
+
+  const energy_charts = bulkData.energy_charts
 
   // Flatten energy_charts into the returned object, mapping short codes to full names
   const mappedEnergyCharts = energy_charts ? {
@@ -111,7 +103,18 @@ export async function fetchSolarData () {
     portugal: energy_charts.pt
   } : {}
 
-  const result = { uk, france, denmark, belgium, italy, ireland, northern_ireland, sweden, norway, ...mappedEnergyCharts }
+  const result = { 
+    uk: bulkData.uk, 
+    france: bulkData.france, 
+    denmark: bulkData.denmark, 
+    belgium: bulkData.belgium, 
+    italy: bulkData.italy, 
+    ireland: bulkData.ireland, 
+    northern_ireland: bulkData.ni, 
+    sweden: bulkData.sweden, 
+    norway: bulkData.norway, 
+    ...mappedEnergyCharts 
+  }
 
   // Return null only when every single endpoint failed — lets callers
   // distinguish "no data at all" from "some countries unavailable".

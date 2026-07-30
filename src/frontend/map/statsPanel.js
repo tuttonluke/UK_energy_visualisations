@@ -31,6 +31,6 @@ export function updateStatsPanel (selectedCountry, currentSolarData) {
   if (!countryData) {
     valEl.textContent = 'Unavailable'
   } else {
-    valEl.textContent = countryData.totalGen !== undefined ? countryData.totalGen : '0'
+    valEl.textContent = countryData.totalGen && countryData.totalGen.solar !== undefined ? countryData.totalGen.solar : '0'
   }
 }

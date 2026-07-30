@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -14,9 +14,8 @@ class GenerationPeriod(BaseModel):
     data: List[FuelData]
 
 
-# Solar Models
 class SolarResponse(BaseModel):
-    totalGen: float
+    totalGen: Dict[str, float]
     timestamp: Optional[str] = None
 
     model_config = ConfigDict(extra="allow")
