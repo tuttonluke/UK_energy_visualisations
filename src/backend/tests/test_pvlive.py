@@ -2,15 +2,14 @@ from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from services.solar_data.uk_pvlive import (
-    fetch_pes_region_data,
+from services.energy_providers.pvlive import (
+    PVLiveProvider,
     fetch_pvlive_history,
-    fetch_pvlive_live,
 )
 
 
 @pytest.mark.asyncio
-@patch("services.solar_data.uk_pvlive.get_client")
+@patch("services.energy_providers.pvlive.get_client")
 async def test_fetch_pvlive_history_success(mock_get_client):
     mock_client = MagicMock()
     mock_response = MagicMock()
@@ -32,7 +31,7 @@ async def test_fetch_pvlive_history_success(mock_get_client):
 
 
 @pytest.mark.asyncio
-@patch("services.solar_data.uk_pvlive.get_client")
+@patch("services.energy_providers.pvlive.get_client")
 async def test_fetch_pvlive_history_error(mock_get_client):
     mock_client = MagicMock()
     mock_client.get = AsyncMock(side_effect=Exception("API Error"))
@@ -57,23 +56,27 @@ async def test_fetch_pes_region_data_success():
 
     mock_client.get = mock_get
 
-    pes_id, gen = await fetch_pes_region_data(mock_client, 10)
+    provider = PVLiveProvider("solar")
+    pes_id, gen, time = await provider.fetch_pes_region_data(mock_client, 10)
     assert pes_id == "10"
     assert gen == 42.5
+    assert time == "time"
 
 
 @pytest.mark.asyncio
-@patch("services.solar_data.uk_pvlive.fetch_pes_region_data")
-@patch("services.solar_data.uk_pvlive.get_client")
+@patch.object(PVLiveProvider, "fetch_pes_region_data")
+@patch("services.energy_providers.pvlive.get_client")
 async def test_fetch_pvlive_live_success(mock_get_client, mock_fetch_pes):
     # Mock PES responses
-    # Returns (pes_id_str, generation)
-    mock_fetch_pes.side_effect = [(str(i), i * 10) for i in range(10, 24)]
+    # Returns (pes_id_str, generation, time_str)
+    mock_fetch_pes.side_effect = [(str(i), i * 10, "time") for i in range(10, 24)]
 
-    result = await fetch_pvlive_live()
+    provider = PVLiveProvider("solar")
+    result = await provider.fetch_live_data()
 
     assert "10" in result
-    assert result["10"] == 100
+    assert result["10"] == {"solar": 100.0}
     assert "23" in result
-    assert result["23"] == 230
-    assert result["totalGen"] > 0
+    assert result["23"] == {"solar": 230.0}
+    assert result["totalGen"] == {"solar": 2310.0}
+    assert result["timestamp"] == "time"

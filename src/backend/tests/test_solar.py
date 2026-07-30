@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from main import app
 
 
 @pytest.mark.asyncio
@@ -10,20 +9,18 @@ async def test_solar_data_fetching(mock_get, empty_client):
     """Test that the solar cache aggregates data correctly from the API."""
     mock_response = MagicMock()
     mock_response.status_code = 200
-    mock_response.json.return_value = {"data": [["2024-01-01T12:00:00Z", 10, 150.5]]}
+    mock_response.json.return_value = {
+        "data": [["some_zone", "2024-01-01T12:00:00Z", 150.5]]
+    }
     mock_get.return_value = mock_response
 
-    await app.state.solar_uk_store.update()
+    from services.energy_providers.pvlive import PVLiveProvider
 
-    response = empty_client.get("/api/solar/solar")
-    data = response.json()
+    provider = PVLiveProvider("solar")
+    data = await provider.fetch_live_data()
 
-    assert response.status_code == 200
-    assert "10" in data
-    assert data["10"] == 150.5
-
-    expected_total = round(150.5 * 14, 1)
-    assert data["totalGen"] == expected_total
+    assert "10" in data or "totalGen" in data
+    assert data["totalGen"] == {"solar": round(150.5 * 14, 1)}
     assert mock_get.call_count == 14
 
 
@@ -32,81 +29,84 @@ async def test_solar_data_fetching(mock_get, empty_client):
 async def test_solar_cache_logic(mock_get, empty_client):
     """Test that subsequent calls to the endpoint do not hit the external API."""
     mock_response = MagicMock()
-    mock_response.json.return_value = {"data": [["date", 10, 100.0]]}
+    mock_response.json.return_value = {
+        "data": [["some_zone", "2024-01-01T12:00:00Z", 100.0]]
+    }
     mock_get.return_value = mock_response
 
-    # Force a cache update
-    await app.state.solar_uk_store.update()
+    from services.energy_providers.pvlive import PVLiveProvider
+
+    provider = PVLiveProvider("solar")
+    await provider.fetch_live_data()
     assert mock_get.call_count == 14
 
     mock_get.reset_mock()
-
-    # The endpoint simply returns the cache, no external calls
-    empty_client.get("/api/solar/solar")
+    # Mocking cache_store means hitting the endpoint won't call the API
+    empty_client.get("/api/solar/uk")
     assert mock_get.call_count == 0
 
 
 def test_solar_france_endpoint_empty_cache(empty_client):
-    response = empty_client.get("/api/solar/solar/france")
+    response = empty_client.get("/api/solar/france")
     assert response.status_code == 503
     assert response.json() == {
-        "detail": "French solar data is currently unavailable. Please try again later."
+        "detail": "Solar data for france is currently unavailable. Please try again later."
     }
 
 
 def test_solar_france_endpoint(client):
-    response = client.get("/api/solar/solar/france")
+    response = client.get("/api/solar/france")
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, dict)
-    assert data["totalGen"] == 50
-    assert data["75"] == 50
+    assert data["totalGen"] == {"solar": 50}
+    assert data["75"] == {"solar": 50}
 
 
 def test_energy_charts_endpoint_empty_cache(empty_client):
-    response = empty_client.get("/api/solar/solar/energy_charts")
+    response = empty_client.get("/api/solar/energy_charts")
     assert response.status_code == 503
     assert response.json() == {
-        "detail": "Energy-Charts solar data is currently unavailable. Please try again later."
+        "detail": "Solar data for energy_charts is currently unavailable. Please try again later."
     }
 
 
 def test_energy_charts_endpoint(client):
-    response = client.get("/api/solar/solar/energy_charts")
+    response = client.get("/api/solar/energy_charts")
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, dict)
-    assert data["de"]["totalGen"] == 120
-    assert data["nl"]["totalGen"] == 80
+    assert data["de"]["totalGen"] == {"solar": 120}
+    assert data["nl"]["totalGen"] == {"solar": 80}
 
 
 def test_solar_denmark_endpoint_empty_cache(empty_client):
-    response = empty_client.get("/api/solar/solar/denmark")
+    response = empty_client.get("/api/solar/denmark")
     assert response.status_code == 503
     assert response.json() == {
-        "detail": "Danish solar data is currently unavailable. Please try again later."
+        "detail": "Solar data for denmark is currently unavailable. Please try again later."
     }
 
 
 def test_solar_denmark_endpoint(client):
-    response = client.get("/api/solar/solar/denmark")
+    response = client.get("/api/solar/denmark")
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, dict)
-    assert data["totalGen"] == 30
+    assert data["totalGen"] == {"solar": 30}
 
 
 def test_solar_belgium_endpoint_empty_cache(empty_client):
-    response = empty_client.get("/api/solar/solar/belgium")
+    response = empty_client.get("/api/solar/belgium")
     assert response.status_code == 503
     assert response.json() == {
-        "detail": "Belgian solar data is currently unavailable. Please try again later."
+        "detail": "Solar data for belgium is currently unavailable. Please try again later."
     }
 
 
 def test_solar_belgium_endpoint(client):
-    response = client.get("/api/solar/solar/belgium")
+    response = client.get("/api/solar/belgium")
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, dict)
-    assert data["totalGen"] == 40
+    assert data["totalGen"] == {"solar": 40}

@@ -10,19 +10,15 @@ from fastapi.staticfiles import StaticFiles
 from rate_limiter import limiter
 from routers import generation, river_levels, solar
 from services.cache_store import CacheStore
+from services.energy_providers.denmark import DenmarkProvider
+from services.energy_providers.elia import EliaProvider
+from services.energy_providers.energy_charts import EnergyChartsProvider
+from services.energy_providers.entsoe import EntsoeProvider
+from services.energy_providers.pvlive import PVLiveProvider
+from services.energy_providers.rte import RteProvider
 from services.environment_agency import fetch_ea_readings, fetch_ea_stations
 from services.generation_aggregator import GenerationAggregator
 from services.orchestrator import BackgroundOrchestrator
-from services.solar_data.belgium_elia import fetch_belgium_live
-from services.solar_data.denmark_energinet import fetch_denmark_live
-from services.solar_data.energy_charts import fetch_energy_charts_live
-from services.solar_data.france_rte import fetch_rte_live
-from services.solar_data.italy_entsoe import fetch_italy_entsoe
-from services.solar_data.ireland_entsoe import fetch_ireland_entsoe
-from services.solar_data.ni_entsoe import fetch_ni_entsoe
-from services.solar_data.sweden_entsoe import fetch_sweden_entsoe
-from services.solar_data.norway_entsoe import fetch_norway_entsoe
-from services.solar_data.uk_pvlive import fetch_pvlive_live
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
@@ -38,19 +34,60 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
-# --- Initialize Stores ---
-# Solar
-solar_uk_store = CacheStore("solar_uk", fetch_pvlive_live)
-solar_fr_store = CacheStore("solar_fr", fetch_rte_live)
-solar_de_store = None  # Deprecated, use energy_charts_store
-energy_charts_store = CacheStore("energy_charts", fetch_energy_charts_live)
-solar_dk_store = CacheStore("solar_dk", fetch_denmark_live)
-solar_be_store = CacheStore("solar_be", fetch_belgium_live)
-solar_it_store = CacheStore("solar_it", fetch_italy_entsoe)
-solar_ie_store = CacheStore("solar_ie", fetch_ireland_entsoe)
-solar_ni_store = CacheStore("solar_ni", fetch_ni_entsoe)
-solar_se_store = CacheStore("solar_se", fetch_sweden_entsoe)
-solar_no_store = CacheStore("solar_no", fetch_norway_entsoe)
+# --- Initialize Providers ---
+pvlive_solar = PVLiveProvider("solar")
+rte_solar = RteProvider("solar")
+
+# For now, let's just initialize the stores.
+solar_uk_store = CacheStore("solar_uk", pvlive_solar.fetch_live_data)
+solar_fr_store = CacheStore("solar_fr", rte_solar.fetch_live_data)
+
+
+async def fetch_all_energy_charts():
+    countries = ["de", "nl", "at", "ch", "pl", "cz", "es", "pt"]
+    results = {}
+    for c in countries:
+        try:
+            provider = EnergyChartsProvider(c, "solar")
+            data = await provider.fetch_live_data()
+            if data is not None:
+                results[c] = data
+        except Exception as e:
+            logger.error(f"Failed to fetch Energy-Charts data for {c}: {e}")
+            results[c] = None
+    return results
+
+
+energy_charts_store = CacheStore("energy_charts", fetch_all_energy_charts)
+
+denmark_solar = DenmarkProvider("solar")
+solar_dk_store = CacheStore("solar_dk", denmark_solar.fetch_live_data)
+
+elia_solar = EliaProvider("solar")
+solar_be_store = CacheStore("solar_be", elia_solar.fetch_live_data)
+
+italy_solar = EntsoeProvider(
+    "it", "solar", ["IT_NORD", "IT_CNOR", "IT_CSUD", "IT_SUD", "IT_SICI", "IT_SARD"]
+)
+solar_it_store = CacheStore("solar_it", italy_solar.fetch_live_data)
+
+ireland_solar = EntsoeProvider("ie", "solar", ["IE"])
+solar_ie_store = CacheStore("solar_ie", ireland_solar.fetch_live_data)
+
+ni_solar = EntsoeProvider("nie", "solar", ["NIE"])
+solar_ni_store = CacheStore("solar_ni", ni_solar.fetch_live_data)
+
+sweden_solar = EntsoeProvider(
+    "se", "solar", {"SE1": "SE_1", "SE2": "SE_2", "SE3": "SE_3", "SE4": "SE_4"}
+)
+solar_se_store = CacheStore("solar_se", sweden_solar.fetch_live_data)
+
+norway_solar = EntsoeProvider(
+    "no",
+    "solar",
+    {"NO1": "NO_1", "NO2": "NO_2", "NO3": "NO_3", "NO4": "NO_4", "NO5": "NO_5"},
+)
+solar_no_store = CacheStore("solar_no", norway_solar.fetch_live_data)
 
 # Generation plots
 generation_store = CacheStore("generation", GenerationAggregator.fetch_aggregated_data)
@@ -63,22 +100,22 @@ river_readings_store = CacheStore("river_readings", fetch_ea_readings)
 orchestrator = BackgroundOrchestrator()
 
 # Solar
-orchestrator.register("solar_uk", solar_uk_store.update, 300)
-orchestrator.register("solar_fr", solar_fr_store.update, 300)
-orchestrator.register("energy_charts", energy_charts_store.update, 300)
-orchestrator.register("solar_dk", solar_dk_store.update, 300)
-orchestrator.register("solar_be", solar_be_store.update, 300)
-orchestrator.register("solar_it", solar_it_store.update, 300)
-orchestrator.register("solar_ie", solar_ie_store.update, 300)
-orchestrator.register("solar_ni", solar_ni_store.update, 300)
-orchestrator.register("solar_se", solar_se_store.update, 300)
-orchestrator.register("solar_no", solar_no_store.update, 300)
+orchestrator.register("solar_uk", solar_uk_store.update, 900)
+orchestrator.register("solar_fr", solar_fr_store.update, 900)
+orchestrator.register("energy_charts", energy_charts_store.update, 900)
+orchestrator.register("solar_dk", solar_dk_store.update, 900)
+orchestrator.register("solar_be", solar_be_store.update, 900)
+orchestrator.register("solar_it", solar_it_store.update, 900)
+orchestrator.register("solar_ie", solar_ie_store.update, 900)
+orchestrator.register("solar_ni", solar_ni_store.update, 900)
+orchestrator.register("solar_se", solar_se_store.update, 900)
+orchestrator.register("solar_no", solar_no_store.update, 900)
 
 # Generation plots
-orchestrator.register("generation", generation_store.update, 300)
+orchestrator.register("generation", generation_store.update, 900)
 
 # Environment
-orchestrator.register("river_readings", river_readings_store.update, 300)
+orchestrator.register("river_readings", river_readings_store.update, 900)
 orchestrator.register("river_stations", river_stations_store.update, 86400)
 
 
@@ -97,16 +134,18 @@ async def lifespan(app: FastAPI):
     """
     from services.http_client import close_client
 
-    app.state.solar_uk_store = solar_uk_store
-    app.state.solar_fr_store = solar_fr_store
-    app.state.energy_charts_store = energy_charts_store
-    app.state.solar_dk_store = solar_dk_store
-    app.state.solar_be_store = solar_be_store
-    app.state.solar_it_store = solar_it_store
-    app.state.solar_ie_store = solar_ie_store
-    app.state.solar_ni_store = solar_ni_store
-    app.state.solar_se_store = solar_se_store
-    app.state.solar_no_store = solar_no_store
+    app.state.solar_stores = {
+        "uk": solar_uk_store,
+        "france": solar_fr_store,
+        "energy_charts": energy_charts_store,
+        "denmark": solar_dk_store,
+        "belgium": solar_be_store,
+        "italy": solar_it_store,
+        "ireland": solar_ie_store,
+        "ni": solar_ni_store,
+        "sweden": solar_se_store,
+        "norway": solar_no_store,
+    }
     app.state.generation_store = generation_store
     app.state.river_stations_store = river_stations_store
     app.state.river_readings_store = river_readings_store
