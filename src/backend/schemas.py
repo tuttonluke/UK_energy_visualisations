@@ -17,6 +17,7 @@ class GenerationPeriod(BaseModel):
 # Solar Models
 class SolarResponse(BaseModel):
     totalGen: float
+    timestamp: Optional[str] = None
 
     model_config = ConfigDict(extra="allow")
 

@@ -21,26 +21,30 @@ async def fetch_ni_entsoe():
     try:
         client = EntsoePandasClient(api_key=token)
 
-        start = pd.Timestamp.utcnow() - pd.Timedelta(hours=2)
+        start = pd.Timestamp.utcnow() - pd.Timedelta(hours=24)
         end = pd.Timestamp.utcnow()
 
         ts = client.query_generation("NIE", start=start, end=end)
         
         data = {}
-        val = 0.0
 
         if ts is not None and "Solar" in ts.columns:
             val = ts["Solar"].iloc[-1]
+            idx = ts.index[-1]
             if isinstance(val, pd.Series):
-                val = val.iloc[-1]
+                val = val.iloc[0]
             val = float(val)
             if pd.isna(val):
                 val = 0.0
             data["totalGen"] = round(val, 1)
-            return data
+            data["NIE"] = data["totalGen"]
+            if idx is not None:
+                data["timestamp"] = idx.isoformat()
+        else:
+            data["totalGen"] = None
+            data["NIE"] = None
         
-        # Northern Ireland doesn't report solar, so return None
-        return None
+        return data
 
     except Exception as e:
         logger.warning(f"ENTSO-E live fetch failed for Northern Ireland: {e}")

@@ -139,7 +139,9 @@ export function updateMapStyles () {
   mapInstance.setPaintProperty(LAYER_IDS.REGIONS_FILL, 'fill-color', [
     'case',
     ['boolean', ['get', 'unavailable'], false],
-    '#475569', // Greyed-out color
+    '#64748b', // Greyed-out color
+    ['all', isMicro, ['boolean', ['get', 'microUnavailable'], false]],
+    '#64748b',
     isMicro,
     microColorExp,
     macroColorExp,

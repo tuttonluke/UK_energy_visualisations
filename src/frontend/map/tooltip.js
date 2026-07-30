@@ -31,6 +31,8 @@ export function buildTooltipHtml ({
   displayRegionData,
   displayNormalizedData,
   disabledHoverMessage,
+  generatedTime,
+  isDataUnavailable,
 }) {
   const config = COUNTRIES[country]
   const sourceLabel = config?.dataSource || 'Unknown'
@@ -63,8 +65,26 @@ export function buildTooltipHtml ({
                 </div>
             </div>`
         }
+        ${isDataUnavailable || disabledHoverMessage ? '' : `
         <hr style="border-color:var(--border-color); margin:8px 0;">
         <p style="margin:0; color:var(--text-muted); font-size:0.75rem; text-align: left; opacity: 0.8;">Source: ${escapeHtml(sourceLabel)}</p>
+        ${generatedTime ? (() => {
+            const date = new Date(generatedTime);
+            const localStr = date.toLocaleString(undefined, { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
+            
+            let countryStr = '';
+            if (config?.timeZone) {
+                try {
+                    const cStr = date.toLocaleString(undefined, { hour: '2-digit', minute: '2-digit', timeZoneName: 'short', timeZone: config.timeZone });
+                    if (cStr !== localStr) {
+                        countryStr = ` (${cStr})`;
+                    }
+                } catch (e) {
+                    console.error("Invalid timezone:", config.timeZone, e);
+                }
+            }
+            return `<p style="margin:0; color:var(--text-muted); font-size:0.75rem; text-align: left; opacity: 0.8;">Data generated: ${escapeHtml(localStr)}${escapeHtml(countryStr)}</p>`;
+        })() : ''}`}
     </div>
   `
 }

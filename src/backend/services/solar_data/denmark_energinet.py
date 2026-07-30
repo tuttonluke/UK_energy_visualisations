@@ -22,16 +22,24 @@ async def fetch_denmark_live():
         # We need the most recent valid SolarPower for DK1 and DK2.
         latest_dk1 = None
         latest_dk2 = None
+        latest_timestamp = None
 
         for record in records:
             area = record.get("PriceArea")
             solar = record.get("SolarPower")
+            timestamp = record.get("Minutes5UTC")
 
             if solar is not None:
                 if area == "DK1" and latest_dk1 is None:
                     latest_dk1 = solar
                 elif area == "DK2" and latest_dk2 is None:
                     latest_dk2 = solar
+                
+                if timestamp:
+                    # Minutes5UTC looks like '2026-07-30T09:35:00'
+                    ts_formatted = timestamp + "Z" if not timestamp.endswith("Z") else timestamp
+                    if latest_timestamp is None or ts_formatted > latest_timestamp:
+                        latest_timestamp = ts_formatted
 
             if latest_dk1 is not None and latest_dk2 is not None:
                 break
@@ -45,11 +53,14 @@ async def fetch_denmark_live():
 
         total_gen = dk1_val + dk2_val
 
-        return {
+        result = {
             "totalGen": round(total_gen, 1),
             "DK1": round(dk1_val, 1),
             "DK2": round(dk2_val, 1),
         }
+        if latest_timestamp:
+            result["timestamp"] = latest_timestamp
+        return result
     except Exception as e:
         logger.error(f"Denmark Live fetch failed: {e}")
         return None

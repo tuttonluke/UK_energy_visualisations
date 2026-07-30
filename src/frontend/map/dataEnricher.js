@@ -122,13 +122,16 @@ export function enrichMapData (topoData, solarData) {
       feature.properties.unavailable = isUnavailable
 
       // Micro generation: only for countries that publish regional data
+      const isMicroUnavailable = config.hasMicroData && (!countryData || countryData[featureIdValue] == null)
+      
       const microGen =
-        config.hasMicroData && countryData && countryData[featureIdValue] !== undefined
+        config.hasMicroData && countryData && countryData[featureIdValue] != null
           ? countryData[featureIdValue]
           : 0
 
       feature.properties.macroGeneration = macroGen
       feature.properties.microGeneration = microGen
+      feature.properties.microUnavailable = isMicroUnavailable
       feature.properties.macroNormalized = totalArea > 0 ? macroGen / totalArea : 0
       feature.properties.microNormalized = featureArea > 0 ? microGen / featureArea : 0
 

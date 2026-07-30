@@ -24,12 +24,13 @@ async def fetch_italy_entsoe():
     try:
         client = EntsoePandasClient(api_key=token)
 
-        # We query the last 2 hours to ensure we get the latest data point
-        start = pd.Timestamp.utcnow() - pd.Timedelta(hours=2)
+        # We query the last 24 hours to ensure we get the latest data point even if delayed
+        start = pd.Timestamp.utcnow() - pd.Timedelta(hours=24)
         end = pd.Timestamp.utcnow()
 
         data = {}
         total = 0.0
+        latest_timestamp = None
 
         for zone in ZONES:
             try:
@@ -39,6 +40,7 @@ async def fetch_italy_entsoe():
                 # Check if we have Solar column
                 if "Solar" in ts.columns:
                     val = ts["Solar"].iloc[-1]
+                    idx = ts.index[-1]
                     if isinstance(val, pd.Series):
                         val = val.iloc[0]
                     val = float(val)
@@ -49,13 +51,20 @@ async def fetch_italy_entsoe():
 
                     data[zone] = val
                     total += val
+                    
+                    if idx is not None:
+                        ts_formatted = idx.isoformat()
+                        if latest_timestamp is None or ts_formatted > latest_timestamp:
+                            latest_timestamp = ts_formatted
                 else:
-                    data[zone] = 0.0
+                    data[zone] = None
             except Exception as e:
                 logger.error(f"Error fetching {zone} from ENTSO-E: {e}")
-                data[zone] = 0.0
+                data[zone] = None
 
         data["totalGen"] = total
+        if latest_timestamp:
+            data["timestamp"] = latest_timestamp
 
         if total == 0 and all(v == 0 for v in data.values()):
             logger.warning(

@@ -49,6 +49,11 @@ export const MICRO_ABSOLUTE_STOPS = [0, 25, 100, 250, 500, 1000, 2000, 3500, 500
  * @returns {Array}          - MapLibre GL expression
  */
 export function buildColorExpression (property, stops) {
-  const pairs = stops.flatMap((stop, i) => [stop, SOLAR_COLOR_ARRAY[i]])
-  return ['interpolate', ['linear'], ['get', property], ...pairs]
+  // Use coalesce to safely fallback to 0 if the property is null, 
+  // preventing MapLibre interpolation errors on missing data.
+  const expression = ['interpolate', ['linear'], ['coalesce', ['get', property], 0]]
+  stops.forEach((stop, i) => {
+    expression.push(stop, SOLAR_COLOR_ARRAY[i])
+  })
+  return expression
 }
