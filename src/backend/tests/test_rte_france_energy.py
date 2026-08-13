@@ -1,11 +1,11 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from services.energy_providers.rte import RteProvider
+from services.energy_providers.rte_france_energy import RteProvider
 
 
 @pytest.mark.asyncio
-@patch("services.energy_providers.rte.get_client")
+@patch("services.energy_providers.rte_france_energy.get_client")
 async def test_rte_provider_success(mock_get_client):
     mock_client = MagicMock()
     mock_response = MagicMock()
@@ -44,7 +44,7 @@ async def test_rte_provider_success(mock_get_client):
 
 
 @pytest.mark.asyncio
-@patch("services.energy_providers.rte.get_client")
+@patch("services.energy_providers.rte_france_energy.get_client")
 async def test_rte_provider_empty_results(mock_get_client):
     mock_client = MagicMock()
     mock_response = MagicMock()
@@ -60,7 +60,7 @@ async def test_rte_provider_empty_results(mock_get_client):
 
 
 @pytest.mark.asyncio
-@patch("services.energy_providers.rte.get_client")
+@patch("services.energy_providers.rte_france_energy.get_client")
 async def test_rte_provider_error(mock_get_client):
     import httpx
 

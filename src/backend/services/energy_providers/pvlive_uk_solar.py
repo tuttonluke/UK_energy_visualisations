@@ -4,32 +4,9 @@ from typing import Any, Dict, Optional
 
 from services.http_client import get_client
 
-from .base import BaseEnergyProvider, format_nested_data
+from .base_energy_provider import BaseEnergyProvider, format_nested_data
 
 logger = logging.getLogger(__name__)
-
-
-async def fetch_pvlive_history(min_dt, max_dt):
-    from datetime import timedelta
-
-    start_str = min_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
-    end_dt = max_dt + timedelta(minutes=60)
-    end_str = end_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
-
-    url = f"https://api.pvlive.uk/pvlive/api/v4/pes/0?start={start_str}&end={end_str}"
-    client = get_client()
-    try:
-        res = await client.get(url, timeout=10.0)
-        res.raise_for_status()
-        data = res.json()
-
-        pv_dict = {}
-        for row in data.get("data", []):
-            pv_dict[row[1]] = row[2]
-        return pv_dict
-    except Exception as e:
-        logger.error(f"PVLive history fetch failed: {e}")
-        return {}
 
 
 class PVLiveProvider(BaseEnergyProvider):
@@ -40,6 +17,38 @@ class PVLiveProvider(BaseEnergyProvider):
     def __init__(self, energy_source: str):
         # Hardcode country to 'uk'
         super().__init__("uk", energy_source)
+
+    async def _do_fetch_history(self) -> Optional[Dict[str, float]]:
+        from datetime import datetime, timedelta
+
+        # Fetch the last 3 days by default to ensure we cover the BMRS window
+        max_dt = datetime.utcnow()
+        min_dt = max_dt - timedelta(days=3)
+
+        start_str = min_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+        end_str = max_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        url = (
+            f"https://api.pvlive.uk/pvlive/api/v4/pes/0?start={start_str}&end={end_str}"
+        )
+        client = get_client()
+        try:
+            res = await client.get(url, timeout=10.0)
+            res.raise_for_status()
+            data = res.json()
+
+            pv_dict = {}
+            for row in data.get("data", []):
+                pv_dict[row[1]] = row[2]
+            return pv_dict
+        except Exception as e:
+            logger.error(f"PVLive history fetch failed: {e}")
+            return None
+
+    async def fetch_history(self) -> Optional[Dict[str, float]]:
+        return await self._execute_with_retry(
+            self._do_fetch_history, cache_key="history", max_retries=3, backoff=2.0
+        )
 
     async def fetch_pes_region_data(self, client, pes_id: int):
         url = f"https://api.pvlive.uk/pvlive/api/v4/pes/{pes_id}"

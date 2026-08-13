@@ -4,7 +4,7 @@ from typing import Any, Dict, Optional
 
 from services.http_client import get_client
 
-from .base import BaseEnergyProvider, format_nested_data
+from .base_energy_provider import BaseEnergyProvider, format_nested_data
 
 logger = logging.getLogger(__name__)
 

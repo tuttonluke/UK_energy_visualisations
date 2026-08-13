@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Union
 import pandas as pd
 from entsoe import EntsoePandasClient
 
-from .base import BaseEnergyProvider, format_nested_data
+from .base_energy_provider import BaseEnergyProvider, format_nested_data
 
 logger = logging.getLogger(__name__)
 

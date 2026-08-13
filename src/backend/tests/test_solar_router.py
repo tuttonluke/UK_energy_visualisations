@@ -14,7 +14,7 @@ async def test_solar_data_fetching(mock_get, empty_client):
     }
     mock_get.return_value = mock_response
 
-    from services.energy_providers.pvlive import PVLiveProvider
+    from services.energy_providers.pvlive_uk_solar import PVLiveProvider
 
     provider = PVLiveProvider("solar")
     data = await provider.fetch_live_data()
@@ -34,7 +34,7 @@ async def test_solar_cache_logic(mock_get, empty_client):
     }
     mock_get.return_value = mock_response
 
-    from services.energy_providers.pvlive import PVLiveProvider
+    from services.energy_providers.pvlive_uk_solar import PVLiveProvider
 
     provider = PVLiveProvider("solar")
     await provider.fetch_live_data()

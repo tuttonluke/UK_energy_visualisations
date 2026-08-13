@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 import pytest
-from services.neso import parse_neso_datetime
+from services.energy_providers.neso_uk_energy import parse_neso_datetime
 
 
 def test_parse_neso_datetime_standard():

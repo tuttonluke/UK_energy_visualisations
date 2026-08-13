@@ -2,12 +2,12 @@ import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from services.energy_providers.energy_charts import EnergyChartsProvider
+from services.energy_providers.fraunhofer_energy_charts import EnergyChartsProvider
 
 
 @pytest.mark.asyncio
-@patch("services.energy_providers.energy_charts.asyncio.sleep", new_callable=AsyncMock)
-@patch("services.energy_providers.energy_charts.get_client")
+@patch("services.energy_providers.fraunhofer_energy_charts.asyncio.sleep", new_callable=AsyncMock)
+@patch("services.energy_providers.fraunhofer_energy_charts.get_client")
 async def test_energy_charts_provider_success(mock_get_client, mock_sleep):
     mock_client = MagicMock()
     mock_response = MagicMock()
@@ -37,8 +37,8 @@ async def test_energy_charts_provider_success(mock_get_client, mock_sleep):
 
 
 @pytest.mark.asyncio
-@patch("services.energy_providers.energy_charts.asyncio.sleep", new_callable=AsyncMock)
-@patch("services.energy_providers.energy_charts.get_client")
+@patch("services.energy_providers.fraunhofer_energy_charts.asyncio.sleep", new_callable=AsyncMock)
+@patch("services.energy_providers.fraunhofer_energy_charts.get_client")
 async def test_energy_charts_provider_missing_source(mock_get_client, mock_sleep):
     mock_client = MagicMock()
     mock_response = MagicMock()
@@ -57,8 +57,8 @@ async def test_energy_charts_provider_missing_source(mock_get_client, mock_sleep
 
 
 @pytest.mark.asyncio
-@patch("services.energy_providers.energy_charts.asyncio.sleep", new_callable=AsyncMock)
-@patch("services.energy_providers.energy_charts.get_client")
+@patch("services.energy_providers.fraunhofer_energy_charts.asyncio.sleep", new_callable=AsyncMock)
+@patch("services.energy_providers.fraunhofer_energy_charts.get_client")
 async def test_energy_charts_provider_error(mock_get_client, mock_sleep):
     import httpx
 
