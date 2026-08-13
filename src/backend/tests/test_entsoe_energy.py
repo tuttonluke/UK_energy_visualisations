@@ -2,12 +2,12 @@ from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
-from services.energy_providers.entsoe import EntsoeProvider
+from services.energy_providers.entsoe_energy import EntsoeProvider
 
 
 @pytest.mark.asyncio
 @patch.dict("os.environ", {"ENTSOE_TOKEN": "test_token"})
-@patch("services.energy_providers.entsoe.EntsoePandasClient")
+@patch("services.energy_providers.entsoe_energy.EntsoePandasClient")
 async def test_entsoe_provider_success(mock_client_class):
     mock_client = MagicMock()
 
@@ -30,7 +30,7 @@ async def test_entsoe_provider_success(mock_client_class):
 
 @pytest.mark.asyncio
 @patch.dict("os.environ", {"ENTSOE_TOKEN": "test_token"})
-@patch("services.energy_providers.entsoe.EntsoePandasClient")
+@patch("services.energy_providers.entsoe_energy.EntsoePandasClient")
 async def test_entsoe_provider_empty_df(mock_client_class):
     mock_client = MagicMock()
     mock_client.query_generation.return_value = pd.DataFrame()
@@ -46,7 +46,7 @@ async def test_entsoe_provider_empty_df(mock_client_class):
 
 @pytest.mark.asyncio
 @patch.dict("os.environ", {"ENTSOE_TOKEN": "test_token"})
-@patch("services.energy_providers.entsoe.EntsoePandasClient")
+@patch("services.energy_providers.entsoe_energy.EntsoePandasClient")
 async def test_entsoe_provider_error(mock_client_class):
     mock_client = MagicMock()
     mock_client.query_generation.side_effect = Exception("API down")

@@ -4,7 +4,6 @@ import pytest
 from fastapi.testclient import TestClient
 from main import app
 from services.cache_store import CacheStore
-from services.environment_agency import fetch_ea_readings, fetch_ea_stations
 from services.generation_aggregator import GenerationAggregator
 
 
@@ -42,15 +41,21 @@ def client():
             "belgium": solar_be_store,
         }
 
+        app_inst.state.bmrs_store = CacheStore("bmrs", dummy_fetch)
+        app_inst.state.neso_store = CacheStore("neso", dummy_fetch)
+        app_inst.state.pvlive_history_store = CacheStore("pvlive_history", dummy_fetch)
+
+        # GenerationAggregator now takes the stores
         app_inst.state.generation_store = CacheStore(
-            "generation", GenerationAggregator.fetch_aggregated_data
+            "generation",
+            GenerationAggregator(
+                app_inst.state.bmrs_store,
+                app_inst.state.pvlive_history_store,
+                app_inst.state.neso_store,
+            ).fetch_aggregated_data,
         )
-        app_inst.state.river_stations_store = CacheStore(
-            "river_stations", fetch_ea_stations
-        )
-        app_inst.state.river_readings_store = CacheStore(
-            "river_readings", fetch_ea_readings
-        )
+        app_inst.state.river_stations_store = CacheStore("river_stations", dummy_fetch)
+        app_inst.state.river_readings_store = CacheStore("river_readings", dummy_fetch)
 
         # Pre-populate cache so we don't hit live APIs or get 503s
         app_inst.state.solar_stores["uk"]._data = {"totalGen": {"solar": 100}}
@@ -109,15 +114,20 @@ def empty_client():
             "belgium": CacheStore("solar_be", dummy_fetch),
         }
 
+        app_inst.state.bmrs_store = CacheStore("bmrs", dummy_fetch)
+        app_inst.state.neso_store = CacheStore("neso", dummy_fetch)
+        app_inst.state.pvlive_history_store = CacheStore("pvlive_history", dummy_fetch)
+
         app_inst.state.generation_store = CacheStore(
-            "generation", GenerationAggregator.fetch_aggregated_data
+            "generation",
+            GenerationAggregator(
+                app_inst.state.bmrs_store,
+                app_inst.state.pvlive_history_store,
+                app_inst.state.neso_store,
+            ).fetch_aggregated_data,
         )
-        app_inst.state.river_stations_store = CacheStore(
-            "river_stations", fetch_ea_stations
-        )
-        app_inst.state.river_readings_store = CacheStore(
-            "river_readings", fetch_ea_readings
-        )
+        app_inst.state.river_stations_store = CacheStore("river_stations", dummy_fetch)
+        app_inst.state.river_readings_store = CacheStore("river_readings", dummy_fetch)
         # Do not pre-populate or mark initialized to simulate updater failure
         yield
         app_inst.state.solar_stores = {}

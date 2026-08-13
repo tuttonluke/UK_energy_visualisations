@@ -1,22 +1,21 @@
-import asyncio
 import logging
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import Any, Dict, Optional
+
+from services.base_data_provider import BaseDataProvider
 
 logger = logging.getLogger(__name__)
 
 
-class BaseEnergyProvider(ABC):
+class BaseEnergyProvider(BaseDataProvider):
     """
     Abstract base class for all energy data providers.
-    Handles retries, rate limiting (optionally implemented by subclasses),
-    and persistence of last known good data.
     """
 
     def __init__(self, country: str, energy_source: str):
+        super().__init__(f"{country}_{energy_source}")
         self.country = country
         self.energy_source = energy_source
-        self._previous_data: Optional[Dict[str, Any]] = None
 
     @abstractmethod
     async def _do_fetch(self) -> Optional[Dict[str, Any]]:
@@ -34,31 +33,12 @@ class BaseEnergyProvider(ABC):
         """
         Wraps the fetch logic with retries and fallback to previous data.
         """
-        for attempt in range(max_retries):
-            try:
-                data = await self._do_fetch()
-                if data:
-                    self._previous_data = data
-                    return data
-            except Exception as e:
-                logger.warning(
-                    f"Fetch failed for {self.country} ({self.energy_source}) - Attempt {attempt + 1}/{max_retries}: {e}"
-                )
-                if attempt < max_retries - 1:
-                    await asyncio.sleep(backoff)
-                else:
-                    logger.error(
-                        f"All {max_retries} fetch attempts failed for {self.country} ({self.energy_source})."
-                    )
-
-        # Fallback to previous data if all retries fail or if _do_fetch returns None
-        if self._previous_data:
-            logger.info(
-                f"Falling back to previous data for {self.country} ({self.energy_source})."
-            )
-            return self._previous_data
-
-        return None
+        return await self._execute_with_retry(
+            self._do_fetch,
+            cache_key="live_data",
+            max_retries=max_retries,
+            backoff=backoff,
+        )
 
 
 def format_nested_data(flat_data: Dict[str, Any], energy_source: str) -> Dict[str, Any]:

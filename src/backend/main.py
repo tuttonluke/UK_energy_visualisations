@@ -8,15 +8,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from rate_limiter import limiter
-from routers import generation, river_levels, solar
+from routers import generation_router, river_levels_router, solar_router
 from services.cache_store import CacheStore
-from services.energy_providers.denmark import DenmarkProvider
-from services.energy_providers.elia import EliaProvider
-from services.energy_providers.energy_charts import EnergyChartsProvider
-from services.energy_providers.entsoe import EntsoeProvider
-from services.energy_providers.pvlive import PVLiveProvider
-from services.energy_providers.rte import RteProvider
-from services.environment_agency import fetch_ea_readings, fetch_ea_stations
+from services.energy_providers.elexon_uk_bmrs import BMRSProvider
+from services.energy_providers.elia_belgium_energy import EliaProvider
+from services.energy_providers.energinet_denmark_energy import DenmarkProvider
+from services.energy_providers.entsoe_energy import EntsoeProvider
+from services.energy_providers.fraunhofer_energy_charts import EnergyChartsProvider
+from services.energy_providers.neso_uk_energy import NesoProvider
+from services.energy_providers.pvlive_uk_solar import PVLiveProvider
+from services.energy_providers.rte_france_energy import RteProvider
+from services.environment_providers.uk_environment_agency import (
+    EnvironmentAgencyProvider,
+)
 from services.generation_aggregator import GenerationAggregator
 from services.orchestrator import BackgroundOrchestrator
 from slowapi import _rate_limit_exceeded_handler
@@ -89,12 +93,25 @@ norway_solar = EntsoeProvider(
 )
 solar_no_store = CacheStore("solar_no", norway_solar.fetch_live_data)
 
+# UK Generation Decoupled Data
+bmrs_provider = BMRSProvider()
+bmrs_store = CacheStore("bmrs", bmrs_provider.fetch_live_data)
+
+neso_provider = NesoProvider()
+neso_store = CacheStore("neso", neso_provider.fetch_live_data)
+
+pvlive_history_store = CacheStore("pvlive_history", pvlive_solar.fetch_history)
+
 # Generation plots
-generation_store = CacheStore("generation", GenerationAggregator.fetch_aggregated_data)
+generation_aggregator = GenerationAggregator(
+    bmrs_store, pvlive_history_store, neso_store
+)
+generation_store = CacheStore("generation", generation_aggregator.fetch_aggregated_data)
 
 # Environment
-river_stations_store = CacheStore("river_stations", fetch_ea_stations)
-river_readings_store = CacheStore("river_readings", fetch_ea_readings)
+ea_provider = EnvironmentAgencyProvider()
+river_stations_store = CacheStore("river_stations", ea_provider.fetch_stations)
+river_readings_store = CacheStore("river_readings", ea_provider.fetch_readings)
 
 # --- Initialize Orchestrator ---
 orchestrator = BackgroundOrchestrator()
@@ -111,8 +128,13 @@ orchestrator.register("solar_ni", solar_ni_store.update, 900)
 orchestrator.register("solar_se", solar_se_store.update, 900)
 orchestrator.register("solar_no", solar_no_store.update, 900)
 
-# Generation plots
-orchestrator.register("generation", generation_store.update, 900)
+# UK Generation (Decoupled Fetches)
+orchestrator.register("bmrs", bmrs_store.update, 900)
+orchestrator.register("neso", neso_store.update, 900)
+orchestrator.register("pvlive_history", pvlive_history_store.update, 900)
+
+# Generation plots - polls fast as it only hits memory
+orchestrator.register("generation", generation_store.update, 30)
 
 # Environment
 orchestrator.register("river_readings", river_readings_store.update, 900)
@@ -208,9 +230,13 @@ async def add_cache_control_header(request: Request, call_next):
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
-app.include_router(solar.router, prefix="/api/solar", tags=["solar"])
-app.include_router(generation.router, prefix="/api/generation", tags=["generation"])
-app.include_router(river_levels.router, prefix="/api/environment", tags=["environment"])
+app.include_router(solar_router.router, prefix="/api/solar", tags=["solar"])
+app.include_router(
+    generation_router.router, prefix="/api/generation", tags=["generation"]
+)
+app.include_router(
+    river_levels_router.router, prefix="/api/environment", tags=["environment"]
+)
 
 
 if __name__ == "__main__":

@@ -1,11 +1,11 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from services.environment_agency import fetch_ea_readings, fetch_ea_stations
+from services.environment_providers.uk_environment_agency import EnvironmentAgencyProvider
 
 
 @pytest.mark.asyncio
-@patch("services.environment_agency.get_client")
+@patch("services.environment_providers.uk_environment_agency.get_client")
 async def test_fetch_ea_stations_success(mock_get_client):
     mock_client = MagicMock()
     mock_response = MagicMock()
@@ -25,7 +25,8 @@ async def test_fetch_ea_stations_success(mock_get_client):
     mock_client.get = AsyncMock(return_value=mock_response)
     mock_get_client.return_value = mock_client
 
-    result = await fetch_ea_stations()
+    provider = EnvironmentAgencyProvider()
+    result = await provider._do_fetch_stations()
 
     assert result is not None
     assert "http://measure/123" in result
@@ -36,18 +37,19 @@ async def test_fetch_ea_stations_success(mock_get_client):
 
 
 @pytest.mark.asyncio
-@patch("services.environment_agency.get_client")
+@patch("services.environment_providers.uk_environment_agency.get_client")
 async def test_fetch_ea_stations_error(mock_get_client):
     mock_client = MagicMock()
     mock_client.get = AsyncMock(side_effect=Exception("EA API down"))
     mock_get_client.return_value = mock_client
 
-    result = await fetch_ea_stations()
-    assert result is None
+    provider = EnvironmentAgencyProvider()
+    with pytest.raises(Exception):
+        await provider._do_fetch_stations()
 
 
 @pytest.mark.asyncio
-@patch("services.environment_agency.get_client")
+@patch("services.environment_providers.uk_environment_agency.get_client")
 async def test_fetch_ea_readings_success(mock_get_client):
     mock_client = MagicMock()
     mock_response = MagicMock()
@@ -57,7 +59,8 @@ async def test_fetch_ea_readings_success(mock_get_client):
     mock_client.get = AsyncMock(return_value=mock_response)
     mock_get_client.return_value = mock_client
 
-    result = await fetch_ea_readings()
+    provider = EnvironmentAgencyProvider()
+    result = await provider._do_fetch_readings()
 
     assert result is not None
     assert len(result) == 1
@@ -65,11 +68,12 @@ async def test_fetch_ea_readings_success(mock_get_client):
 
 
 @pytest.mark.asyncio
-@patch("services.environment_agency.get_client")
+@patch("services.environment_providers.uk_environment_agency.get_client")
 async def test_fetch_ea_readings_error(mock_get_client):
     mock_client = MagicMock()
     mock_client.get = AsyncMock(side_effect=Exception("EA API down"))
     mock_get_client.return_value = mock_client
 
-    result = await fetch_ea_readings()
-    assert result is None
+    provider = EnvironmentAgencyProvider()
+    with pytest.raises(Exception):
+        await provider._do_fetch_readings()

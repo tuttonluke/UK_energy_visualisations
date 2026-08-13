@@ -1,11 +1,11 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from services.energy_providers.denmark import DenmarkProvider
+from services.energy_providers.energinet_denmark_energy import DenmarkProvider
 
 
 @pytest.mark.asyncio
-@patch("services.energy_providers.denmark.get_client")
+@patch("services.energy_providers.energinet_denmark_energy.get_client")
 async def test_denmark_provider_success(mock_get_client):
     mock_client = MagicMock()
     mock_response = MagicMock()
@@ -40,7 +40,7 @@ async def test_denmark_provider_success(mock_get_client):
 
 
 @pytest.mark.asyncio
-@patch("services.energy_providers.denmark.get_client")
+@patch("services.energy_providers.energinet_denmark_energy.get_client")
 async def test_denmark_provider_empty_records(mock_get_client):
     mock_client = MagicMock()
     mock_response = MagicMock()
@@ -55,7 +55,7 @@ async def test_denmark_provider_empty_records(mock_get_client):
 
 
 @pytest.mark.asyncio
-@patch("services.energy_providers.denmark.get_client")
+@patch("services.energy_providers.energinet_denmark_energy.get_client")
 async def test_denmark_provider_missing_field(mock_get_client):
     mock_client = MagicMock()
     mock_response = MagicMock()
@@ -73,7 +73,7 @@ async def test_denmark_provider_missing_field(mock_get_client):
 
 
 @pytest.mark.asyncio
-@patch("services.energy_providers.denmark.get_client")
+@patch("services.energy_providers.energinet_denmark_energy.get_client")
 async def test_denmark_provider_error(mock_get_client):
     import httpx
 

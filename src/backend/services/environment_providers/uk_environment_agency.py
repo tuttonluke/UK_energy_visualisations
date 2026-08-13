@@ -1,5 +1,7 @@
 import logging
+from typing import Any, Dict, List, Optional
 
+from services.environment_providers.base_environment_provider import BaseEnvironmentProvider
 from services.http_client import get_client
 
 logger = logging.getLogger(__name__)
@@ -51,10 +53,17 @@ def _add_measures_to_cache(item, station_info, cache):
             cache[measure_id] = station_info
 
 
-async def fetch_ea_stations():
-    url = "https://environment.data.gov.uk/flood-monitoring/id/stations?parameter=level&_view=full"
-    client = get_client()
-    try:
+class EnvironmentAgencyProvider(BaseEnvironmentProvider):
+    """
+    Fetches river level stations and latest readings from the Environment Agency API.
+    """
+
+    def __init__(self):
+        super().__init__("environment_agency")
+
+    async def _do_fetch_stations(self) -> Optional[Dict[str, Any]]:
+        url = "https://environment.data.gov.uk/flood-monitoring/id/stations?parameter=level&_view=full"
+        client = get_client()
         response = await client.get(url, timeout=30.0)
         response.raise_for_status()
         data = response.json()
@@ -65,19 +74,21 @@ async def fetch_ea_stations():
             _add_measures_to_cache(item, station_info, new_cache)
 
         return new_cache
-    except Exception as e:
-        logger.error(f"Failed to fetch stations: {e}")
-        return None
 
+    async def fetch_stations(self) -> Optional[Dict[str, Any]]:
+        return await self._execute_with_retry(
+            self._do_fetch_stations, cache_key="stations", max_retries=3, backoff=2.0
+        )
 
-async def fetch_ea_readings():
-    url = "https://environment.data.gov.uk/flood-monitoring/data/readings?latest"
-    client = get_client()
-    try:
+    async def _do_fetch_readings(self) -> Optional[List[Dict[str, Any]]]:
+        url = "https://environment.data.gov.uk/flood-monitoring/data/readings?latest"
+        client = get_client()
         response = await client.get(url, timeout=20.0)
         response.raise_for_status()
         data = response.json()
         return data.get("items", [])
-    except Exception as e:
-        logger.error(f"Failed to fetch readings: {e}")
-        return None
+
+    async def fetch_readings(self) -> Optional[List[Dict[str, Any]]]:
+        return await self._execute_with_retry(
+            self._do_fetch_readings, cache_key="readings", max_retries=3, backoff=2.0
+        )

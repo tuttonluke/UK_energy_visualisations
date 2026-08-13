@@ -1,7 +1,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from services.energy_providers.base import BaseEnergyProvider, format_nested_data
+from services.energy_providers.base_energy_provider import BaseEnergyProvider, format_nested_data
 
 
 class DummyProvider(BaseEnergyProvider):
@@ -27,7 +27,7 @@ async def test_base_provider_success():
 
 
 @pytest.mark.asyncio
-@patch("services.energy_providers.base.asyncio.sleep", new_callable=AsyncMock)
+@patch("services.base_data_provider.asyncio.sleep", new_callable=AsyncMock)
 async def test_base_provider_retry(mock_sleep):
     provider = DummyProvider("uk", "solar")
 
@@ -43,12 +43,15 @@ async def test_base_provider_retry(mock_sleep):
 
 
 @pytest.mark.asyncio
-@patch("services.energy_providers.base.asyncio.sleep", new_callable=AsyncMock)
+@patch("services.base_data_provider.asyncio.sleep", new_callable=AsyncMock)
 async def test_base_provider_fallback(mock_sleep):
     provider = DummyProvider("uk", "solar")
 
     # Store previous data manually
-    provider._previous_data = {"totalGen": {"solar": 42}, "timestamp": "old_time"}
+    provider._previous_data_cache["live_data"] = {
+        "totalGen": {"solar": 42},
+        "timestamp": "old_time",
+    }
 
     # Make _do_fetch fail continuously
     provider._do_fetch = AsyncMock(side_effect=Exception("fail"))

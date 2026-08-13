@@ -1,15 +1,11 @@
-from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from services.energy_providers.pvlive import (
-    PVLiveProvider,
-    fetch_pvlive_history,
-)
+from services.energy_providers.pvlive_uk_solar import PVLiveProvider
 
 
 @pytest.mark.asyncio
-@patch("services.energy_providers.pvlive.get_client")
+@patch("services.energy_providers.pvlive_uk_solar.get_client")
 async def test_fetch_pvlive_history_success(mock_get_client):
     mock_client = MagicMock()
     mock_response = MagicMock()
@@ -20,28 +16,25 @@ async def test_fetch_pvlive_history_success(mock_get_client):
     mock_client.get = AsyncMock(return_value=mock_response)
     mock_get_client.return_value = mock_client
 
-    min_dt = datetime(2026, 7, 8, 12, 0, tzinfo=timezone.utc)
-    max_dt = datetime(2026, 7, 8, 12, 30, tzinfo=timezone.utc)
+    provider = PVLiveProvider("solar")
+    result = await provider._do_fetch_history()
 
-    result = await fetch_pvlive_history(min_dt, max_dt)
-
+    assert result is not None
     assert "2026-07-08T12:00:00Z" in result
     assert result["2026-07-08T12:00:00Z"] == 100
     assert result["2026-07-08T12:30:00Z"] == 150
 
 
 @pytest.mark.asyncio
-@patch("services.energy_providers.pvlive.get_client")
+@patch("services.energy_providers.pvlive_uk_solar.get_client")
 async def test_fetch_pvlive_history_error(mock_get_client):
     mock_client = MagicMock()
     mock_client.get = AsyncMock(side_effect=Exception("API Error"))
     mock_get_client.return_value = mock_client
 
-    min_dt = datetime(2026, 7, 8, 12, 0, tzinfo=timezone.utc)
-    max_dt = datetime(2026, 7, 8, 12, 30, tzinfo=timezone.utc)
-
-    result = await fetch_pvlive_history(min_dt, max_dt)
-    assert result == {}
+    provider = PVLiveProvider("solar")
+    result = await provider._do_fetch_history()
+    assert result is None
 
 
 @pytest.mark.asyncio
@@ -65,7 +58,7 @@ async def test_fetch_pes_region_data_success():
 
 @pytest.mark.asyncio
 @patch.object(PVLiveProvider, "fetch_pes_region_data")
-@patch("services.energy_providers.pvlive.get_client")
+@patch("services.energy_providers.pvlive_uk_solar.get_client")
 async def test_fetch_pvlive_live_success(mock_get_client, mock_fetch_pes):
     # Mock PES responses
     # Returns (pes_id_str, generation, time_str)
