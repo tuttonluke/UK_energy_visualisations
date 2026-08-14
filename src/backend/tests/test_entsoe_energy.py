@@ -1,3 +1,12 @@
+"""
+===============================================================================
+File: test_entsoe_energy.py
+Description: Tests for the ENTSO-E energy provider.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
@@ -17,7 +26,6 @@ async def test_entsoe_provider_success(mock_client_class):
     mock_client.query_generation.return_value = df
     mock_client_class.return_value = mock_client
 
-    # Test with dict mapping
     provider = EntsoeProvider("se", "solar", {"SE1": "SE_1"})
     data = await provider._do_fetch()
 

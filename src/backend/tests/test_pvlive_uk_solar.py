@@ -1,3 +1,12 @@
+"""
+===============================================================================
+File: test_pvlive_uk_solar.py
+Description: Backend component for UK Energy Visualisations.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest

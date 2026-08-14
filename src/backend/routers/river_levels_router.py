@@ -1,3 +1,11 @@
+"""
+===============================================================================
+File: river_levels_router.py
+Description: API routes for fetching river level data.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
 from dependencies import get_river_readings_store, get_river_stations_store
 from fastapi import APIRouter, Depends, HTTPException, Request
 from rate_limiter import limiter

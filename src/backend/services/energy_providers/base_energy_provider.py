@@ -1,3 +1,12 @@
+"""
+===============================================================================
+File: base_energy_provider.py
+Description: Base class for specific energy data provider implementations.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 import logging
 from abc import abstractmethod
 from typing import Any, Dict, Optional

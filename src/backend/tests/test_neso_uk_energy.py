@@ -1,3 +1,12 @@
+"""
+===============================================================================
+File: test_neso_uk_energy.py
+Description: Tests for the NESO UK energy provider.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 from datetime import datetime, timezone
 
 import pytest

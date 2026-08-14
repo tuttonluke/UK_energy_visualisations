@@ -1,3 +1,12 @@
+"""
+===============================================================================
+File: test_elia_belgium_energy.py
+Description: Tests for the Elia Belgium energy provider.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -56,8 +65,6 @@ async def test_elia_provider_empty_results(mock_get_client):
     provider = EliaProvider("solar")
     data = await provider._do_fetch()
 
-    # Returns nested dictionary formatted with 0 values or just totalGen?
-    # Based on format_nested_data, if flat_data is {"totalGen": 0.0}, it formats that.
     assert data is not None
     assert data["totalGen"] == {"solar": 0.0}
 

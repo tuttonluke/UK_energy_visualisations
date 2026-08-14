@@ -1,3 +1,12 @@
+"""
+===============================================================================
+File: test_river_levels_router.py
+Description: Tests for the river levels API router.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 import pytest
 from services.cache_store import CacheStore
 

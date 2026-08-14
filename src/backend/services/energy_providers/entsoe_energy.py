@@ -1,3 +1,13 @@
+"""
+===============================================================================
+File: entsoe_energy.py
+Description: Client for fetching energy data via the ENTSO-E API. https://www.entsoe.eu/data/transparency-platform/
+ENTSOE is the European Network of Transmission System Operators for Electricity.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 import asyncio
 import logging
 import os

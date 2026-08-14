@@ -1,3 +1,12 @@
+"""
+===============================================================================
+File: test_rte_france_energy.py
+Description: Tests for the RTE France energy provider.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest

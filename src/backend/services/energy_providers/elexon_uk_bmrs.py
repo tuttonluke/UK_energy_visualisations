@@ -1,3 +1,12 @@
+"""
+===============================================================================
+File: elexon_uk_bmrs.py
+Description: Client for fetching UK generation data from Elexon BMRS. https://www.elexon.co.uk/
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 import logging
 from datetime import datetime
 from typing import Any, Dict, Optional

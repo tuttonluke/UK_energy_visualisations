@@ -1,3 +1,12 @@
+"""
+===============================================================================
+File: orchestrator.py
+Description: Manages background tasks for continuous fetching of external API data.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 import asyncio
 import logging
 from typing import Awaitable, Callable, List, Tuple

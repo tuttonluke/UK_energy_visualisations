@@ -1,3 +1,12 @@
+"""
+===============================================================================
+File: dependencies.py
+Description: Defines dependency injections for FastAPI routes.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 from fastapi import Request
 from services.cache_store import CacheStore
 

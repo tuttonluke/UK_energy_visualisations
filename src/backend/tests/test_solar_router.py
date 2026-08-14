@@ -1,3 +1,12 @@
+"""
+===============================================================================
+File: test_solar_router.py
+Description: Tests for the solar API router.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 from unittest.mock import MagicMock, patch
 
 import pytest

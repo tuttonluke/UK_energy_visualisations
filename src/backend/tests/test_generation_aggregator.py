@@ -1,3 +1,12 @@
+"""
+===============================================================================
+File: test_generation_aggregator.py
+Description: Tests for the generation data aggregator.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 from datetime import datetime
 
 import pytest

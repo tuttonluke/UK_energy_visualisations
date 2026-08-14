@@ -1,3 +1,13 @@
+"""
+===============================================================================
+File: test_api.py
+Description: Tests for the FastAPI router endpoints.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
+
 def test_river_levels_endpoint_empty_cache(empty_client):
     response = empty_client.get("/api/environment/river_levels")
     assert response.status_code == 503
