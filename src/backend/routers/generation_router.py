@@ -1,3 +1,11 @@
+"""
+===============================================================================
+File: generation_router.py
+Description: API routes for fetching aggregated energy generation data.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
 from typing import List
 
 from dependencies import get_generation_store

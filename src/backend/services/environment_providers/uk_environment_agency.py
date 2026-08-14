@@ -1,7 +1,18 @@
+"""
+===============================================================================
+File: uk_environment_agency.py
+Description: Client for fetching river station and reading data from the UK Environment Agency.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 import logging
 from typing import Any, Dict, List, Optional
 
-from services.environment_providers.base_environment_provider import BaseEnvironmentProvider
+from services.environment_providers.base_environment_provider import (
+    BaseEnvironmentProvider,
+)
 from services.http_client import get_client
 
 logger = logging.getLogger(__name__)

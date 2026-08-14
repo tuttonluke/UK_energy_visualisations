@@ -1,7 +1,19 @@
+"""
+===============================================================================
+File: test_base_energy_provider.py
+Description: Tests for the core BaseEnergyProvider functionality.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from services.energy_providers.base_energy_provider import BaseEnergyProvider, format_nested_data
+from services.energy_providers.base_energy_provider import (
+    BaseEnergyProvider,
+    format_nested_data,
+)
 
 
 class DummyProvider(BaseEnergyProvider):

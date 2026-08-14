@@ -1,3 +1,12 @@
+"""
+===============================================================================
+File: generation_aggregator.py
+Description: Aggregates generation data across BMRS, NESO, and PVLive sources.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 import copy
 import logging
 from datetime import datetime, timedelta

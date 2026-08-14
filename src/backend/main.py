@@ -1,3 +1,12 @@
+"""
+===============================================================================
+File: main.py
+Description: Entry point for the FastAPI application.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 import logging
 import os
 from contextlib import asynccontextmanager

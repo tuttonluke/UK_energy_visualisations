@@ -1,3 +1,12 @@
+"""
+===============================================================================
+File: schemas.py
+Description: Pydantic models for request and response validation.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 from typing import Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict

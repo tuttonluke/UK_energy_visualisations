@@ -1,3 +1,12 @@
+"""
+===============================================================================
+File: neso_uk_energy.py
+Description: Client for fetching embedded wind data in the UK from NESO. https://www.neso.energy/
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 import logging
 import urllib.parse
 from datetime import datetime, timedelta

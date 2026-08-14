@@ -1,3 +1,13 @@
+"""
+===============================================================================
+File: fraunhofer_energy_charts.py
+Description: Client for fetching energy data from Fraunhofer Energy Charts. https://www.energy-charts.info/?l=en&c=DE
+Fraunhofer is used to gather data from Germany, Netherlands, Austria, Czechia, Poland, Switzerland, Spain, and Portugal.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 import asyncio
 import logging
 from typing import Any, Dict, Optional

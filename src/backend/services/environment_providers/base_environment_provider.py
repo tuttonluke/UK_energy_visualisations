@@ -1,3 +1,11 @@
+"""
+===============================================================================
+File: base_environment_provider.py
+Description: Base class for specific environmental data provider implementations.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
 import logging
 
 from services.base_data_provider import BaseDataProvider

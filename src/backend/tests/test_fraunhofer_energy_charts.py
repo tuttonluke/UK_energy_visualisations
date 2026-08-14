@@ -1,3 +1,12 @@
+"""
+===============================================================================
+File: test_fraunhofer_energy_charts.py
+Description: Tests for the Fraunhofer Energy Charts provider.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -6,7 +15,10 @@ from services.energy_providers.fraunhofer_energy_charts import EnergyChartsProvi
 
 
 @pytest.mark.asyncio
-@patch("services.energy_providers.fraunhofer_energy_charts.asyncio.sleep", new_callable=AsyncMock)
+@patch(
+    "services.energy_providers.fraunhofer_energy_charts.asyncio.sleep",
+    new_callable=AsyncMock,
+)
 @patch("services.energy_providers.fraunhofer_energy_charts.get_client")
 async def test_energy_charts_provider_success(mock_get_client, mock_sleep):
     mock_client = MagicMock()
@@ -37,7 +49,10 @@ async def test_energy_charts_provider_success(mock_get_client, mock_sleep):
 
 
 @pytest.mark.asyncio
-@patch("services.energy_providers.fraunhofer_energy_charts.asyncio.sleep", new_callable=AsyncMock)
+@patch(
+    "services.energy_providers.fraunhofer_energy_charts.asyncio.sleep",
+    new_callable=AsyncMock,
+)
 @patch("services.energy_providers.fraunhofer_energy_charts.get_client")
 async def test_energy_charts_provider_missing_source(mock_get_client, mock_sleep):
     mock_client = MagicMock()
@@ -57,7 +72,10 @@ async def test_energy_charts_provider_missing_source(mock_get_client, mock_sleep
 
 
 @pytest.mark.asyncio
-@patch("services.energy_providers.fraunhofer_energy_charts.asyncio.sleep", new_callable=AsyncMock)
+@patch(
+    "services.energy_providers.fraunhofer_energy_charts.asyncio.sleep",
+    new_callable=AsyncMock,
+)
 @patch("services.energy_providers.fraunhofer_energy_charts.get_client")
 async def test_energy_charts_provider_error(mock_get_client, mock_sleep):
     import httpx

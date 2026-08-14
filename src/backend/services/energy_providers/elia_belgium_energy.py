@@ -1,3 +1,12 @@
+"""
+===============================================================================
+File: elia_belgium_energy.py
+Description: Client for fetching energy data from Elia (Belgium). https://www.elia.be/en/
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 import logging
 from typing import Any, Dict, Optional
 

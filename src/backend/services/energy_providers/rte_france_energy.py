@@ -1,3 +1,12 @@
+"""
+===============================================================================
+File: rte_france_energy.py
+Description: Client for fetching energy data from RTE (France). https://www.rte-france.com/en/discover-rte/about-rte
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 import logging
 from typing import Any, Dict, Optional
 

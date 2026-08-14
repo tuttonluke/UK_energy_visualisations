@@ -1,3 +1,12 @@
+"""
+===============================================================================
+File: conftest.py
+Description: Shared pytest fixtures for the backend test suite.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 from contextlib import asynccontextmanager
 
 import pytest
@@ -45,7 +54,6 @@ def client():
         app_inst.state.neso_store = CacheStore("neso", dummy_fetch)
         app_inst.state.pvlive_history_store = CacheStore("pvlive_history", dummy_fetch)
 
-        # GenerationAggregator now takes the stores
         app_inst.state.generation_store = CacheStore(
             "generation",
             GenerationAggregator(

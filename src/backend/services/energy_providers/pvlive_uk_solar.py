@@ -1,3 +1,12 @@
+"""
+===============================================================================
+File: pvlive_uk_solar.py
+Description: Client for fetching solar data in the UK from the University of Sheffield's PV live project. https://www.solar.sheffield.ac.uk/pvlive/
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 import asyncio
 import logging
 from typing import Any, Dict, Optional

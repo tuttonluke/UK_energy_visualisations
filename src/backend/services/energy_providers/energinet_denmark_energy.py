@@ -1,3 +1,12 @@
+"""
+===============================================================================
+File: energinet_denmark_energy.py
+Description: Client for fetching energy data from Energinet (Denmark). https://en.energinet.dk/
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 import logging
 from typing import Any, Dict, Optional
 

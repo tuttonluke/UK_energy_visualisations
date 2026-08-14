@@ -1,3 +1,12 @@
+"""
+===============================================================================
+File: cache_store.py
+Description: In-memory thread-safe cache storage for managing fetched API data.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 import asyncio
 import logging
 from typing import Awaitable, Callable, Generic, Optional, TypeVar

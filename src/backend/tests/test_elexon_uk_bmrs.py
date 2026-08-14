@@ -1,3 +1,12 @@
+"""
+===============================================================================
+File: test_elexon_uk_bmrs.py
+Description: Tests for the Elexon BMRS energy provider.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -49,5 +58,5 @@ async def test_fetch_bmrs_generation_error(mock_get_client):
     mock_get_client.return_value = mock_client
 
     provider = BMRSProvider()
-    with pytest.raises(Exception):
+    with pytest.raises(Exception, match="API down"):
         await provider._do_fetch()

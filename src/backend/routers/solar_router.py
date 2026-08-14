@@ -1,4 +1,11 @@
-from typing import Any, Dict
+"""
+===============================================================================
+File: solar_router.py
+Description: API routes for fetching solar energy generation data from various providers.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
 
 from dependencies import get_solar_stores
 from fastapi import APIRouter, Depends, HTTPException, Request

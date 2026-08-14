@@ -1,7 +1,18 @@
+"""
+===============================================================================
+File: test_uk_environment_agency.py
+Description: Tests for the UK Environment Agency provider.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from services.environment_providers.uk_environment_agency import EnvironmentAgencyProvider
+from services.environment_providers.uk_environment_agency import (
+    EnvironmentAgencyProvider,
+)
 
 
 @pytest.mark.asyncio
@@ -44,7 +55,7 @@ async def test_fetch_ea_stations_error(mock_get_client):
     mock_get_client.return_value = mock_client
 
     provider = EnvironmentAgencyProvider()
-    with pytest.raises(Exception):
+    with pytest.raises(Exception, match="EA API down"):
         await provider._do_fetch_stations()
 
 
@@ -75,5 +86,5 @@ async def test_fetch_ea_readings_error(mock_get_client):
     mock_get_client.return_value = mock_client
 
     provider = EnvironmentAgencyProvider()
-    with pytest.raises(Exception):
+    with pytest.raises(Exception, match="EA API down"):
         await provider._do_fetch_readings()

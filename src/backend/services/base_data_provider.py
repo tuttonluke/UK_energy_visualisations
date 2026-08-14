@@ -1,3 +1,12 @@
+"""
+===============================================================================
+File: base_data_provider.py
+Description: Base class providing core fetching, retry, and fallback logic for all data providers.
+Date: 2026-08-14
+License: MIT License
+===============================================================================
+"""
+
 import asyncio
 import logging
 from typing import Awaitable, Callable, Optional, TypeVar
