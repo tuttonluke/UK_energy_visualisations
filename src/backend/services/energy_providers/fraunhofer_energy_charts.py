@@ -40,7 +40,7 @@ class EnergyChartsProvider(BaseEnergyProvider):
         }
         return mapping.get(source, source.capitalize())
 
-    async def _do_fetch(self) -> Optional[Dict[str, Any]]:
+    async def fetch_raw_data(self) -> Any:
         client = get_client()
         url = f"https://api.energy-charts.info/public_power?country={self.country}"
 
@@ -50,12 +50,16 @@ class EnergyChartsProvider(BaseEnergyProvider):
 
             res = await client.get(url, timeout=15.0)
             res.raise_for_status()
-            data = res.json()
+            return res.json()
+
+    def extract_data(self, raw_data: Any) -> Optional[Dict[str, Any]]:
+        if not raw_data:
+            return None
 
         data_series = None
-        unix_seconds_series = data.get("unix_seconds", [])
+        unix_seconds_series = raw_data.get("unix_seconds", [])
 
-        for series in data.get("production_types", []):
+        for series in raw_data.get("production_types", []):
             if series.get("name") == self._energy_charts_source_name:
                 data_series = series.get("data", [])
                 break

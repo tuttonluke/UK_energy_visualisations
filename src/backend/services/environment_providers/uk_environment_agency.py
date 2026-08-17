@@ -72,32 +72,46 @@ class EnvironmentAgencyProvider(BaseEnvironmentProvider):
     def __init__(self):
         super().__init__("environment_agency")
 
-    async def _do_fetch_stations(self) -> Optional[Dict[str, Any]]:
+    async def fetch_raw_stations(self) -> Any:
         url = "https://environment.data.gov.uk/flood-monitoring/id/stations?parameter=level&_view=full"
         client = get_client()
         response = await client.get(url, timeout=30.0)
         response.raise_for_status()
-        data = response.json()
+        return response.json()
 
+    def extract_stations(self, raw_data: Any) -> Optional[Dict[str, Any]]:
+        if not raw_data:
+            return None
         new_cache = {}
-        for item in data.get("items", []):
+        for item in raw_data.get("items", []):
             station_info = _extract_station_info(item)
             _add_measures_to_cache(item, station_info, new_cache)
-
         return new_cache
+
+    async def _do_fetch_stations(self) -> Optional[Dict[str, Any]]:
+        raw_data = await self.fetch_raw_stations()
+        return self.extract_stations(raw_data)
 
     async def fetch_stations(self) -> Optional[Dict[str, Any]]:
         return await self._execute_with_retry(
             self._do_fetch_stations, cache_key="stations", max_retries=3, backoff=2.0
         )
 
-    async def _do_fetch_readings(self) -> Optional[List[Dict[str, Any]]]:
+    async def fetch_raw_readings(self) -> Any:
         url = "https://environment.data.gov.uk/flood-monitoring/data/readings?latest"
         client = get_client()
         response = await client.get(url, timeout=20.0)
         response.raise_for_status()
-        data = response.json()
-        return data.get("items", [])
+        return response.json()
+
+    def extract_readings(self, raw_data: Any) -> Optional[List[Dict[str, Any]]]:
+        if not raw_data:
+            return None
+        return raw_data.get("items", [])
+
+    async def _do_fetch_readings(self) -> Optional[List[Dict[str, Any]]]:
+        raw_data = await self.fetch_raw_readings()
+        return self.extract_readings(raw_data)
 
     async def fetch_readings(self) -> Optional[List[Dict[str, Any]]]:
         return await self._execute_with_retry(

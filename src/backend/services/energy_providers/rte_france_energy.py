@@ -33,19 +33,24 @@ class RteProvider(BaseEnergyProvider):
         }
         return mapping.get(source, source)
 
-    async def _do_fetch(self) -> Optional[Dict[str, Any]]:
+    async def fetch_raw_data(self) -> Any:
         source_field = self._map_source_name(self.energy_source)
         url = f"https://odre.opendatasoft.com/api/explore/v2.1/catalog/datasets/eco2mix-regional-tr/records?limit=100&order_by=date_heure%20DESC&where={source_field}%20is%20not%20null"
 
         client = get_client()
         res = await client.get(url, timeout=10.0)
         res.raise_for_status()
-        data = res.json()
+        return res.json()
 
+    def extract_data(self, raw_data: Any) -> Optional[Dict[str, Any]]:
+        if not raw_data:
+            return None
+
+        source_field = self._map_source_name(self.energy_source)
         flat_data = {}
         latest_timestamp = None
 
-        for record in data.get("results", []):
+        for record in raw_data.get("results", []):
             insee_code = record.get("code_insee_region")
             gen = record.get(source_field)
             timestamp = record.get("date_heure")

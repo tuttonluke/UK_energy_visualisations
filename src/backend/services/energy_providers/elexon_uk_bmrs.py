@@ -28,20 +28,21 @@ class BMRSProvider(BaseEnergyProvider):
         super().__init__("uk", "bmrs")
         self.url = "https://data.elexon.co.uk/bmrs/api/v1/generation/outturn/summary"
 
-    async def _do_fetch(self) -> Optional[Dict[str, Any]]:
+    async def fetch_raw_data(self) -> Any:
         client = get_client()
         response = await client.get(self.url, timeout=10.0)
         response.raise_for_status()
-        bmrs_data = response.json()
+        return response.json()
 
-        if not bmrs_data:
+    def extract_data(self, raw_data: Any) -> Optional[Dict[str, Any]]:
+        if not raw_data:
             return None
 
         times = [
             datetime.fromisoformat(d["startTime"].replace("Z", "+00:00"))
-            for d in bmrs_data
+            for d in raw_data
         ]
         min_dt = min(times)
         max_dt = max(times)
 
-        return {"data": bmrs_data, "min_dt": min_dt, "max_dt": max_dt}
+        return {"data": raw_data, "min_dt": min_dt, "max_dt": max_dt}

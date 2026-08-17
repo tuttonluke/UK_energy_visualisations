@@ -98,7 +98,7 @@ export function enrichMapData (topoData, solarData) {
   availableKeys.forEach(key => {
     const config = COUNTRIES[key]
     const countryData = solarData[key]
-    const isUnavailable = !countryData
+    const isUnavailable = !!config.disabledHoverMessage || !countryData || !countryData.totalGen || countryData.totalGen.solar == null
     const { totalArea, featureAreas } = cachedAreaData[key]
 
     if (isUnavailable) {
@@ -122,7 +122,8 @@ export function enrichMapData (topoData, solarData) {
       feature.properties.unavailable = isUnavailable
 
       // Micro generation: only for countries that publish regional data
-      const isMicroUnavailable = config.hasMicroData && (!countryData || !countryData[featureIdValue] || countryData[featureIdValue].solar == null)
+      const isMicroDisabled = config.disabledRegions && config.disabledRegions.includes(featureIdValue)
+      const isMicroUnavailable = config.hasMicroData && (isMicroDisabled || !countryData || !countryData[featureIdValue] || countryData[featureIdValue].solar == null)
       
       const microGen =
         config.hasMicroData && countryData && countryData[featureIdValue] && countryData[featureIdValue].solar != null
@@ -152,7 +153,7 @@ export function enrichMapData (topoData, solarData) {
     outlineFeatures.push({
       type: 'Feature',
       id: key,
-      properties: { country: key, macroGeneration: macroGen, macroNormalized },
+      properties: { country: key, macroGeneration: macroGen, macroNormalized, unavailable: isUnavailable },
       geometry: outline,
     })
   })

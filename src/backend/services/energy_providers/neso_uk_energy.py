@@ -9,7 +9,7 @@ License: MIT License
 
 import logging
 import urllib.parse
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
 from services.energy_providers.base_energy_provider import BaseEnergyProvider
@@ -56,21 +56,15 @@ class NesoProvider(BaseEnergyProvider):
     def __init__(self):
         super().__init__("uk", "neso")
 
-    async def _do_fetch(self) -> Optional[Dict[str, Any]]:
-        # Fetch the last 3 days by default to ensure we cover any recent BMRS data ranges
-        min_date = datetime.utcnow() - timedelta(days=3)
-        return await self.fetch_neso_embedded_wind(min_date)
-
-    async def fetch_neso_embedded_wind(
-        self, min_date: datetime
-    ) -> Optional[Dict[str, Any]]:
+    async def fetch_raw_data(self) -> Any:
+        min_date = datetime.now(timezone.utc) - timedelta(days=3)
         datasets = [
             "db6c038f-98af-4570-ab60-24d71ebd0ae5",  # Live
             "31861619-0b86-47ba-bac2-d008a760af54",  # Archive 2026 H2
         ]
 
         date_str = min_date.strftime("%Y-%m-%d")
-        neso_dict = {}
+        raw_responses = []
 
         client = get_client()
         for dataset_id in datasets:
@@ -80,21 +74,28 @@ class NesoProvider(BaseEnergyProvider):
             try:
                 res = await client.get(url, timeout=10.0)
                 if res.status_code == 200:
-                    data = res.json()
-                    for row in data.get("result", {}).get("records", []):
-                        try:
-                            dt = parse_neso_datetime(row["DATE_GMT"], row["TIME_GMT"])
-                            dt_iso = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
-                            val = row.get("EMBEDDED_WIND_FORECAST")
-                            if val is not None:
-                                neso_dict[dt_iso] = int(float(val))
-                        except (ValueError, TypeError) as e:
-                            logger.warning(f"Skipping row due to parsing error: {e}")
+                    raw_responses.append(res.json())
             except Exception as e:
                 logger.error(f"NESO fetch failed for {dataset_id}: {e}")
 
-        # Ensure we return something, even if empty, or None if completely failed
-        # If both fail we should probably return None to trigger a retry
+        return raw_responses
+
+    def extract_data(self, raw_data: Any) -> Optional[Dict[str, Any]]:
+        if not raw_data:
+            return None
+
+        neso_dict = {}
+        for data in raw_data:
+            for row in data.get("result", {}).get("records", []):
+                try:
+                    dt = parse_neso_datetime(row["DATE_GMT"], row["TIME_GMT"])
+                    dt_iso = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+                    val = row.get("EMBEDDED_WIND_FORECAST")
+                    if val is not None:
+                        neso_dict[dt_iso] = int(float(val))
+                except (ValueError, TypeError) as e:
+                    logger.warning(f"Skipping row due to parsing error: {e}")
+
         if not neso_dict:
             return None
 

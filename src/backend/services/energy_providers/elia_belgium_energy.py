@@ -26,7 +26,7 @@ class EliaProvider(BaseEnergyProvider):
         # Hardcode country to 'be'
         super().__init__("be", energy_source)
 
-    async def _do_fetch(self) -> Optional[Dict[str, Any]]:
+    async def fetch_raw_data(self) -> Any:
         # Currently only supports Solar from ods087
         if self.energy_source != "solar":
             logger.warning(
@@ -39,9 +39,13 @@ class EliaProvider(BaseEnergyProvider):
 
         res = await client.get(url, timeout=15.0)
         res.raise_for_status()
-        data = res.json()
+        return res.json()
 
-        records = data.get("results", [])
+    def extract_data(self, raw_data: Any) -> Optional[Dict[str, Any]]:
+        if not raw_data:
+            return None
+
+        records = raw_data.get("results", [])
 
         target_regions = ["Flanders", "Wallonia", "Brussels"]
         latest_vals = {}
@@ -78,7 +82,11 @@ class EliaProvider(BaseEnergyProvider):
             flat_data[topo_name] = round(val, 1)
             total_gen += val
 
-        flat_data["totalGen"] = round(total_gen, 1)
+        if not latest_vals:
+            flat_data["totalGen"] = None
+        else:
+            flat_data["totalGen"] = round(total_gen, 1)
+
         if latest_timestamp:
             flat_data["timestamp"] = latest_timestamp
 

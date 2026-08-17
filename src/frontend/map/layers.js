@@ -31,7 +31,7 @@ const MAP_COLORS = {
   DEFAULT_FILL: '#1e293b',   // Slate 800 — base fill before data loads
   BORDER: '#94a3b8',         // Slate 400 — region internal borders
   COUNTRY_OUTLINE: '#ffffff', // White — country outline on hover
-  UNAVAILABLE: '#64748b',    // Slate 500 — greyed-out / no-data regions
+  UNAVAILABLE: '#334155',    // Slate 700 — dark grey for no-data regions
 }
 
 // ---------------------------------------------------------------------------
@@ -212,7 +212,12 @@ export function updateMapStyles () {
   mapInstance.setPaintProperty(
     LAYER_IDS.COUNTRIES_BORDERS,
     'line-color',
-    macroColorExp
+    [
+      'case',
+      ['boolean', ['get', 'unavailable'], false],
+      MAP_COLORS.UNAVAILABLE,
+      macroColorExp
+    ]
   )
 
   // Opacity: highlight selected, fade others
