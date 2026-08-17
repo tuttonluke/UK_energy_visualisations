@@ -26,13 +26,28 @@ class BaseEnergyProvider(BaseDataProvider):
         self.country = country
         self.energy_source = energy_source
 
-    @abstractmethod
     async def _do_fetch(self) -> Optional[Dict[str, Any]]:
         """
-        Perform the actual data fetching and parsing.
-        Should return a dictionary containing 'totalGen', 'timestamp', and region keys,
-        where values are nested dicts: {'solar': 123.0}.
-        Raises exceptions on network or HTTP errors.
+        Template method that coordinates fetching and extracting data.
+        """
+        raw_data = await self.fetch_raw_data()
+        if raw_data is None:
+            return None
+
+        return self.extract_data(raw_data)
+
+    @abstractmethod
+    async def fetch_raw_data(self) -> Any:
+        """
+        Network-bound method to execute HTTP requests and return the raw API response.
+        """
+        pass
+
+    @abstractmethod
+    def extract_data(self, raw_data: Any) -> Optional[Dict[str, Any]]:
+        """
+        CPU-bound method to parse the raw data and return a standardized flat dictionary.
+        This method will be fully synchronous and extremely easy to unit test.
         """
         pass
 
@@ -67,5 +82,5 @@ def format_nested_data(flat_data: Dict[str, Any], energy_source: str) -> Dict[st
         elif v is not None:
             nested[k] = {energy_source: v}
         else:
-            nested[k] = {energy_source: 0.0}
+            nested[k] = {energy_source: None}
     return nested

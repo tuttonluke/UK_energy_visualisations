@@ -34,15 +34,19 @@ class DenmarkProvider(BaseEnergyProvider):
         }
         return mapping.get(source, "SolarPower")
 
-    async def _do_fetch(self) -> Optional[Dict[str, Any]]:
+    async def fetch_raw_data(self) -> Any:
         url = "https://api.energidataservice.dk/dataset/ElectricityProdex5MinRealtime?limit=10&sort=Minutes5UTC%20desc"
         client = get_client()
 
         res = await client.get(url, timeout=15.0)
         res.raise_for_status()
-        data = res.json()
+        return res.json()
 
-        records = data.get("records", [])
+    def extract_data(self, raw_data: Any) -> Optional[Dict[str, Any]]:
+        if not raw_data:
+            return None
+
+        records = raw_data.get("records", [])
         source_field = self._map_source_name(self.energy_source)
 
         latest_dk1 = None

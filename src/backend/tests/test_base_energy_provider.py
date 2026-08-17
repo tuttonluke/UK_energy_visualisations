@@ -23,11 +23,12 @@ class DummyProvider(BaseEnergyProvider):
 
 @pytest.mark.asyncio
 async def test_format_nested_data():
-    flat = {"totalGen": 100, "region_A": 50, "timestamp": "time"}
+    flat = {"totalGen": 100, "region_A": 50, "region_B": None, "timestamp": "time"}
     nested = format_nested_data(flat, "wind")
 
     assert nested["totalGen"] == {"wind": 100}
     assert nested["region_A"] == {"wind": 50}
+    assert nested["region_B"] == {"wind": None}
     assert nested["timestamp"] == "time"
 
 

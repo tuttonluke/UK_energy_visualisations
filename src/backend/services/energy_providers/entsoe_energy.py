@@ -53,54 +53,69 @@ class EntsoeProvider(BaseEnergyProvider):
         }
         return mapping.get(source, source.capitalize())
 
-    async def _do_fetch(self) -> Optional[Dict[str, Any]]:
+    async def fetch_raw_data(self) -> Any:
         client = self._get_client()
-        start = pd.Timestamp.utcnow() - pd.Timedelta(hours=24)
-        end = pd.Timestamp.utcnow()
+        start = pd.Timestamp.now("UTC") - pd.Timedelta(hours=24)
+        end = pd.Timestamp.now("UTC")
 
-        data = {}
-        total = 0.0
-        latest_timestamp = None
-
+        raw_results = {}
         for out_zone, entsoe_zone in self.zones.items():
             try:
                 # Run the synchronous API client query in a threadpool to prevent blocking the event loop
                 ts = await asyncio.to_thread(
                     client.query_generation, entsoe_zone, start=start, end=end
                 )
-
-                if (
-                    ts is not None
-                    and not ts.empty
-                    and self._entsoe_source_name in ts.columns
-                ):
-                    val = ts[self._entsoe_source_name].iloc[-1]
-                    idx = ts.index[-1]
-                    if isinstance(val, pd.Series):
-                        val = val.iloc[0]
-                    val = float(val)
-
-                    if pd.isna(val):
-                        val = 0.0
-
-                    data[out_zone] = val
-                    total += val
-
-                    if idx is not None:
-                        ts_formatted = idx.isoformat()
-                        if latest_timestamp is None or ts_formatted > latest_timestamp:
-                            latest_timestamp = ts_formatted
-                else:
-                    data[out_zone] = None
+                raw_results[out_zone] = ts
             except Exception as e:
                 logger.error(f"Error fetching {entsoe_zone} from ENTSO-E: {e}")
+                raw_results[out_zone] = None
+
+        return raw_results
+
+    def extract_data(self, raw_data: Any) -> Optional[Dict[str, Any]]:
+        if not raw_data:
+            return None
+
+        data = {}
+        total = 0.0
+        latest_timestamp = None
+
+        for out_zone, ts in raw_data.items():
+            if (
+                ts is not None
+                and not ts.empty
+                and self._entsoe_source_name in ts.columns
+            ):
+                val = ts[self._entsoe_source_name].iloc[-1]
+                idx = ts.index[-1]
+                if isinstance(val, pd.Series):
+                    val = val.iloc[0]
+                val = float(val)
+
+                if pd.isna(val):
+                    val = 0.0
+
+                data[out_zone] = val
+                total += val
+
+                if idx is not None:
+                    ts_formatted = idx.isoformat()
+                    if latest_timestamp is None or ts_formatted > latest_timestamp:
+                        latest_timestamp = ts_formatted
+            else:
                 data[out_zone] = None
 
-        data["totalGen"] = total
+        if all(
+            v is None for k, v in data.items() if k not in ["timestamp", "totalGen"]
+        ):
+            data["totalGen"] = None
+        else:
+            data["totalGen"] = total
+
         if latest_timestamp:
             data["timestamp"] = latest_timestamp
 
-        if total == 0 and all(
+        if data.get("totalGen") == 0 and all(
             v == 0 or v is None for v in data.values() if isinstance(v, (int, float))
         ):
             logger.warning(

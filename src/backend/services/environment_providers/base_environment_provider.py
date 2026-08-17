@@ -6,6 +6,7 @@ Date: 2026-08-14
 License: MIT License
 ===============================================================================
 """
+
 import logging
 
 from services.base_data_provider import BaseDataProvider

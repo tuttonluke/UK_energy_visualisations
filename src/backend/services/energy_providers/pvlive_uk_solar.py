@@ -28,10 +28,10 @@ class PVLiveProvider(BaseEnergyProvider):
         super().__init__("uk", energy_source)
 
     async def _do_fetch_history(self) -> Optional[Dict[str, float]]:
-        from datetime import datetime, timedelta
+        from datetime import datetime, timedelta, timezone
 
         # Fetch the last 3 days by default to ensure we cover the BMRS window
-        max_dt = datetime.utcnow()
+        max_dt = datetime.now(timezone.utc)
         min_dt = max_dt - timedelta(days=3)
 
         start_str = min_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -73,7 +73,7 @@ class PVLiveProvider(BaseEnergyProvider):
 
         return str(pes_id), 0, None
 
-    async def _do_fetch(self) -> Optional[Dict[str, Any]]:
+    async def fetch_raw_data(self) -> Any:
         if self.energy_source != "solar":
             logger.warning(
                 f"PVLiveProvider only supports 'solar', got {self.energy_source}"
@@ -82,13 +82,17 @@ class PVLiveProvider(BaseEnergyProvider):
 
         client = get_client()
         tasks = [self.fetch_pes_region_data(client, pes_id) for pes_id in range(10, 24)]
-        results = await asyncio.gather(*tasks)
+        return await asyncio.gather(*tasks)
+
+    def extract_data(self, raw_data: Any) -> Optional[Dict[str, Any]]:
+        if not raw_data:
+            return None
 
         flat_data = {}
         total_generation_mw = 0.0
         latest_timestamp = None
 
-        for pes_id_str, generation, timestamp in results:
+        for pes_id_str, generation, timestamp in raw_data:
             if generation is not None and generation > 0:
                 flat_data[pes_id_str] = generation
                 total_generation_mw += generation

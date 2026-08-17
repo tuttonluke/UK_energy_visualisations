@@ -313,6 +313,7 @@ export const COUNTRIES = {
     displayIdFallback: 'NO',
     dataSource: 'ENTSO-E',
     hasMicroData: true,
+    disabledRegions: ['NO3'],
     mapView: MAP_VIEWS.NORWAY,
   },
 }

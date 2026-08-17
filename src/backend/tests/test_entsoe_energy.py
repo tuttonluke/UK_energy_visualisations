@@ -48,8 +48,8 @@ async def test_entsoe_provider_empty_df(mock_client_class):
     data = await provider._do_fetch()
 
     assert data is not None
-    assert data["totalGen"] == {"solar": 0.0}
-    assert data["IE"] == {"solar": 0.0}
+    assert data["totalGen"] == {"solar": None}
+    assert data["IE"] == {"solar": None}
 
 
 @pytest.mark.asyncio
@@ -64,8 +64,8 @@ async def test_entsoe_provider_error(mock_client_class):
     data = await provider._do_fetch()
 
     assert data is not None
-    assert data["totalGen"] == {"solar": 0.0}
-    assert data["IE"] == {"solar": 0.0}
+    assert data["totalGen"] == {"solar": None}
+    assert data["IE"] == {"solar": None}
 
 
 def test_entsoe_provider_no_token():

@@ -66,7 +66,7 @@ async def test_elia_provider_empty_results(mock_get_client):
     data = await provider._do_fetch()
 
     assert data is not None
-    assert data["totalGen"] == {"solar": 0.0}
+    assert data["totalGen"] == {"solar": None}
 
 
 @pytest.mark.asyncio
